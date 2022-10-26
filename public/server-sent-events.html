@@ -4,9 +4,50 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Server Sent Event</title>
+    <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
   </head>
   <body>
-    Hello Server Sent Events
+    <h1>Sever Sent Events</h1>
+    <template data-message-template>
+      <div data-msg></div>
+    </template>
+    <button data-join-button>Join Events</button>
+    <button data-leave-button>Leave Events</button>
+    <div data-messages></div>
+    <script>
+      const { fromEvent, switchMap, map, share, finalize, takeUntil } = rxjs;
+      const messagesEl = document.querySelector("[data-messages]");
+      const joinButtonEl = document.querySelector("[data-join-button]");
+      const leaveButtonEl = document.querySelector("[data-leave-button]");
+
+      const clickJoin$ = fromEvent(joinButtonEl, "click");
+      const clickLeave$ = fromEvent(leaveButtonEl, "click");
+
+      const messages$ = clickJoin$.pipe(
+        switchMap(() => {
+          const events = new EventSource("http://localhost:4200/events");
+          return fromEvent(events, "open").pipe(
+            finalize(() => {
+              events.close();
+            }),
+            switchMap(() => {
+              return fromEvent(events, "message").pipe(
+                map((event) => event.data)
+              );
+            }),
+            takeUntil(clickLeave$)
+          );
+        })
+      );
+
+      messages$.subscribe((data) => {
+        const templateEl = document.querySelector("[data-message-template]");
+        const node = document.importNode(templateEl.content, true);
+        node.querySelector("[data-msg]").innerText = data;
+        messagesEl.appendChild(node);
+        // console.log(data);
+      });
+    </script>
   </body>
 </html>

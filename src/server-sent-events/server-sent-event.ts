@@ -1,29 +1,45 @@
-import { bindCallback, Observable, Subject, takeUntil } from "rxjs";
-import { ClientMessage } from "../http/server/http-create-server";
+import { AsyncSubject, Observable, Subject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
+import { ClientMessage, whenRoute } from "../http/server/http-create-server";
+import { fromListener } from "../operators/from-listener";
 
-export class ServerSentEvent<T> {
+export class ServerSentEvent<T = any> {
+  onDestroy$ = new AsyncSubject<void>();
   serverSent$ = new Subject<T>();
-  constructor(public client$: Observable<ClientMessage>) {
-    client$.subscribe(({ request, response }) => {
-      response.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        Connection: "keep-alive",
-        "Cache-Control": "no-cache",
-      });
 
-      response.write("test");
-
-      const fromListener = bindCallback(request.addListener);
-
-      this.serverSent$
-        .pipe(takeUntil(fromListener("close")))
-        .subscribe((message) => {
-          response.write(message);
+  constructor(
+    public server$: Observable<ClientMessage>,
+    public options: { url: string }
+  ) {
+    this.server$
+      .pipe(
+        whenRoute({ url: this.options.url, method: "GET" }),
+        takeUntil(this.onDestroy$)
+      )
+      .subscribe(({ request, response }) => {
+        response.writeHead(200, {
+          "Content-Type": "text/event-stream",
+          // Connection: "keep-alive",
+          ...(request.httpVersionMajor === 1 && { Connection: "keep-alive" }),
+          "Cache-Control": "no-cache",
         });
-    });
+
+        const clientClose$ = fromListener(request, "close");
+
+        this.serverSent$.pipe(takeUntil(clientClose$)).subscribe((message) => {
+          // const id = Date.now();
+          // response.write(`id:${id}\ndata: ${JSON.stringify({ message })}\n\n`);
+          response.write(`data: ${JSON.stringify({ message })}\n\n`);
+        });
+      });
   }
 
   boardcast(message: T) {
     this.serverSent$.next(message);
+  }
+
+  complete() {
+    this.onDestroy$.next();
+    this.onDestroy$.complete();
   }
 }
