@@ -1,21 +1,15 @@
 import { AsyncSubject, Observable, Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
-import { ClientMessage, whenRoute } from "../http/server/http-create-server";
+import { ClientMessage } from "../http/server/http-create-server";
 import { fromListener } from "../operators/from-listener";
 
 export class ServerSentEvent<T = any> {
   onDestroy$ = new AsyncSubject<void>();
   serverSent$ = new Subject<T>();
 
-  constructor(
-    public server$: Observable<ClientMessage>,
-    public options: { url: string }
-  ) {
-    this.server$
-      .pipe(
-        whenRoute({ url: this.options.url, method: "GET" }),
-        takeUntil(this.onDestroy$)
-      )
+  constructor(public serverWithRoute$: Observable<ClientMessage>) {
+    this.serverWithRoute$
+      .pipe(takeUntil(this.onDestroy$))
       .subscribe(({ request, response }) => {
         response.writeHead(200, {
           "Content-Type": "text/event-stream",

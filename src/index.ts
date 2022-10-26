@@ -33,9 +33,14 @@ socket$.subscribe((message) => {
   socket$.boardcast(`${message}`);
 });
 
-const serverSentEvents = new ServerSentEvent<string>(server$, {
-  url: "/events",
-});
+const serverSentEvents = new ServerSentEvent<string>(
+  server$.pipe(
+    whenRoute({
+      url: "/events",
+      method: "GET",
+    })
+  )
+);
 
 setInterval(() => {
   serverSentEvents.boardcast(`Hello`);
