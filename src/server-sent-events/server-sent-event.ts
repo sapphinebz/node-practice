@@ -3,6 +3,7 @@ import { takeUntil } from "rxjs/operators";
 import { ClientMessage } from "../http/server/http-create-server";
 import { fromListener } from "../operators/from-listener";
 
+// server ส่งไป client ทางเดียว
 export class ServerSentEvent<T = any> {
   onDestroy$ = new AsyncSubject<void>();
   serverSent$ = new Subject<T>();

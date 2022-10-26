@@ -1,7 +1,7 @@
 import { Observable, ReplaySubject, Subject } from "rxjs";
 import { WebSocketServer } from "ws";
 
-export class WebSocketObservable extends Observable<string> {
+export class WebSocketObservable {
   private readonly serverMessageSubject = new ReplaySubject<string>();
   private readonly clientMessageSubject = new Subject<string>();
 
@@ -9,24 +9,24 @@ export class WebSocketObservable extends Observable<string> {
   readonly clientMessage$ = this.clientMessageSubject.asObservable();
 
   constructor(public options: { port: number }) {
-    super((subscriber) => {
-      return this.clientMessageSubject.subscribe(subscriber);
-    });
-
     this.webSocketServer = new WebSocketServer({
       port: this.options.port,
     });
 
     this.webSocketServer.on("connection", (webSocketClient) => {
+      //Server -> Client
       const serverMessageSubscription = this.serverMessageSubject.subscribe(
         (message) => {
           webSocketClient.send(message);
         }
       );
+
+      //Client -> Server
       webSocketClient.on("message", (message) => {
         this.clientMessageSubject.next(`${message}`);
       });
 
+      //Client close connection
       webSocketClient.on("close", () => {
         // จะทำงานเมื่อปิด Connection ในตัวอย่างคือ ปิด Browser
         serverMessageSubscription.unsubscribe();

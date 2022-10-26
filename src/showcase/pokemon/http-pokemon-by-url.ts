@@ -1,6 +1,6 @@
-import { httpJsonGet } from "../../http/http-json.get";
+import { httpGet } from "../../http/server/http-get";
 import { EachPk_Response } from "./model";
 
 export function httpPokemonByUrl(url: string) {
-  return httpJsonGet<EachPk_Response>(url);
+  return httpGet<EachPk_Response>(url, (chunks) => JSON.parse(chunks));
 }
