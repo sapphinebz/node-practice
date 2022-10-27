@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gold Today</title>
+  </head>
+  <body>
+    <div data-html></div>
+    <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+    <script>
+      const { fromEvent, switchMap, map, share, finalize, defer, takeUntil } =
+        rxjs;
+      const messages$ = defer(() => {
+        const events = new EventSource("http://localhost:4200/fetch-gold");
+        const onError$ = fromEvent(events, "error");
+        return fromEvent(events, "open").pipe(
+          finalize(() => {
+            events.close();
+          }),
+          switchMap(() => {
+            return fromEvent(events, "message").pipe(
+              map((event) => JSON.parse(event.data).message)
+            );
+          }),
+          takeUntil(onError$)
+        );
+      });
+
+      messages$.subscribe((msgHTML) => {
+        const divEl = document.createElement("div");
+        divEl.innerHTML = msgHTML;
+        const tableGoldEl = divEl.querySelector(
+          "#DetailPlace_uc_goldprices1_GoldPricesUpdatePanel"
+        );
+
+        const contentHTML = document.querySelector("[data-html]");
+        contentHTML.innerHTML = ``;
+        contentHTML.appendChild(tableGoldEl);
+        // document.querySelector("[data-html]").appendChild(tableGoldEl);
+        // document.body.innerHTML = msgHTML;
+      });
+    </script>
+  </body>
+</html>
