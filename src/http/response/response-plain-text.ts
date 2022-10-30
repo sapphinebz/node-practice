@@ -1,7 +1,13 @@
-import http from "http";
+import { MonoTypeOperatorFunction } from "rxjs";
+import { tap } from "rxjs/operators";
+import { ClientMessage } from "../server/http-create-server";
 
-export function responsePlainText(response: http.ServerResponse, text: string) {
-  response.statusCode = 200;
-  response.setHeader("Content-Type", "text/plain");
-  response.end(text);
+export function responsePlainText(
+  text: string
+): MonoTypeOperatorFunction<ClientMessage> {
+  return tap(({ response }) => {
+    response.statusCode = 200;
+    response.setHeader("Content-Type", "text/plain");
+    response.end(text);
+  });
 }

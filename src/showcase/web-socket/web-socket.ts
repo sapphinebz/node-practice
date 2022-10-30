@@ -1,4 +1,4 @@
-import { share, switchMap, tap } from "rxjs/operators";
+import { share, mergeMap, tap } from "rxjs/operators";
 import { responseHTML } from "../../http/response/response-html";
 import {
   httpCreateServer,
@@ -19,7 +19,7 @@ server$
       url: "/",
       method: "GET",
     }),
-    switchMap((client) => {
+    mergeMap((client) => {
       return webSocketPage$.pipe(
         tap((html) => {
           responseHTML(client.response, html as string);

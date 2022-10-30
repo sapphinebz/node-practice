@@ -1,5 +1,5 @@
 import { share } from "rxjs/operators";
-import { responseHTMLFile } from "../../http/response/response-html";
+import { readStreamAndResponseHTML } from "../../http/response/response-html";
 import {
   httpCreateServer,
   whenRoute,
@@ -11,7 +11,7 @@ const server$ = httpCreateServer({ port: 4200 }).pipe(share());
 server$
   .pipe(
     whenRoute({ url: "/", method: "GET" }),
-    responseHTMLFile(`${process.cwd()}/public/server-sent-events.html`)
+    readStreamAndResponseHTML(`${process.cwd()}/public/server-sent-events.html`)
   )
   .subscribe();
 

@@ -1,23 +1,19 @@
-import http from "http";
-import {
-  MonoTypeOperatorFunction,
-  OperatorFunction,
-  switchMap,
-  tap,
-} from "rxjs";
+import { IncomingMessage, ServerResponse } from "http";
+import { OperatorFunction, mergeMap, tap } from "rxjs";
 import { readStreamFile } from "../../read-file/read-stream-file";
 import { ClientMessage } from "../server/http-create-server";
-
-export function responseHTML(response: http.ServerResponse, html: string) {
+export function responseHTML(
+  response: ServerResponse<IncomingMessage>,
+  html: string
+) {
   response.writeHead(200, { "Content-Type": "text/html" });
   response.write(html);
   response.end();
 }
-
-export function responseHTMLFile(
+export function readStreamAndResponseHTML(
   path: string
 ): OperatorFunction<ClientMessage, string | Buffer> {
-  return switchMap(({ response }) => {
+  return mergeMap(({ response }) => {
     return readStreamFile(path).pipe(
       tap((html) => {
         responseHTML(response, html as string);
