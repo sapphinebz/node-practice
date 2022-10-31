@@ -3,7 +3,7 @@ import { concat } from "rxjs";
 import { mergeMap, shareReplay } from "rxjs/operators";
 import { AppExpress } from "../../express/app-express";
 import { httpDownload } from "../../http/http-download";
-import { readStreamAndResponseHTML } from "../../http/response/response-html";
+import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
 import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-response";
 
 const apiExpress = new AppExpress({ port: 4200 });
@@ -20,7 +20,9 @@ const downloadPdf$ = httpDownload(
 
 httpExpress
   .get("/")
-  .pipe(readStreamAndResponseHTML(`${process.cwd()}/public/cors-policy.html`))
+  .pipe(
+    streamHTMLFileToResponse(`${process.cwd()}/public/progress-download.html`)
+  )
   .subscribe();
 
 apiExpress.options("/pdf", corsOptions).subscribe();

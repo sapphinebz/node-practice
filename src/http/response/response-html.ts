@@ -10,14 +10,3 @@ export function responseHTML(
   response.write(html);
   response.end();
 }
-export function readStreamAndResponseHTML(
-  path: string
-): OperatorFunction<ClientMessage, string | Buffer> {
-  return mergeMap(({ response }) => {
-    return readStreamFile(path).pipe(
-      tap((html) => {
-        responseHTML(response, html as string);
-      })
-    );
-  });
-}

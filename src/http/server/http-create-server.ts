@@ -1,6 +1,6 @@
 import http from "http";
 import { hostname } from "os";
-import { MonoTypeOperatorFunction, Observable } from "rxjs";
+import { MonoTypeOperatorFunction, Observable, Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 import url, { URL } from "url";
 
@@ -14,18 +14,27 @@ export function httpCreateServer(options: {
   hostname?: string;
   backlog?: () => void;
 }) {
+  let refCount = 0;
+  const onClientRequest$ = new Subject<ClientMessage>();
+  const server = http
+    .createServer((request, response) => {
+      onClientRequest$.next({ request, response });
+    })
+    .listen(options.port, options.hostname || "localhost", () => {
+      options.backlog?.();
+    });
+
   return new Observable<ClientMessage>((subscriber) => {
-    const server = http
-      .createServer((req, res) => {
-        subscriber.next({ request: req, response: res });
-      })
-      .listen(options.port, options.hostname || "localhost", () => {
-        options.backlog?.();
-      });
+    refCount++;
+    const subscription = onClientRequest$.subscribe(subscriber);
 
     return {
       unsubscribe: () => {
-        server.close();
+        subscription.unsubscribe();
+        refCount--;
+        if (refCount === 0) {
+          server.close();
+        }
       },
     };
   });
@@ -49,7 +58,7 @@ export function isMatchRoutePath(url: string | undefined, routePath: string) {
 
 export function whenRoute(options: {
   url: string;
-  method: "GET" | "POST" | "PATCH" | "DELETE";
+  method: "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
 }): MonoTypeOperatorFunction<ClientMessage> {
   return filter((client) => {
     return (

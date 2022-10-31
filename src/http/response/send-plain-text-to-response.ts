@@ -2,7 +2,7 @@ import { MonoTypeOperatorFunction } from "rxjs";
 import { tap } from "rxjs/operators";
 import { ClientMessage } from "../server/http-create-server";
 
-export function responsePlainText(
+export function sendPlainTextToResponse(
   text: string
 ): MonoTypeOperatorFunction<ClientMessage> {
   return tap(({ response }) => {

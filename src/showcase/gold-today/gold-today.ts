@@ -1,6 +1,6 @@
 import { interval } from "rxjs";
 import { exhaustMap, map, share } from "rxjs/operators";
-import { readStreamAndResponseHTML } from "../../http/response/response-html";
+import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
 import {
   httpCreateServer,
   whenRoute,
@@ -16,7 +16,7 @@ server$
       url: "/",
       method: "GET",
     }),
-    readStreamAndResponseHTML(`${process.cwd()}/public/gold-today.html`)
+    streamHTMLFileToResponse(`${process.cwd()}/public/gold-today.html`)
   )
   .subscribe();
 
