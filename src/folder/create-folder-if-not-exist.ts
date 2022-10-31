@@ -1,12 +1,9 @@
 import * as fs from "fs";
+import path from "path";
 
 export function createFolderIfNotExist(folderWithFilePath: string) {
-  const folderPath = removeFilePath(folderWithFilePath);
-  if (!fs.existsSync(folderPath)) {
-    fs.mkdirSync(folderPath, { recursive: true });
+  const dirPath = path.dirname(folderWithFilePath);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
   }
-}
-
-function removeFilePath(folderWithFilePath: string) {
-  return folderWithFilePath.replace(/\/\w+\.\w+$/g, "");
 }

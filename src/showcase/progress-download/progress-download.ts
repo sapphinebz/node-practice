@@ -2,6 +2,7 @@ import cors from "cors";
 import { concat } from "rxjs";
 import { mergeMap, shareReplay } from "rxjs/operators";
 import { AppExpress } from "../../express/app-express";
+import path from "path";
 import { httpDownload } from "../../http/http-download";
 import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
 import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-response";
@@ -21,7 +22,9 @@ const downloadPdf$ = httpDownload(
 httpExpress
   .get("/")
   .pipe(
-    streamHTMLFileToResponse(`${process.cwd()}/public/progress-download.html`)
+    streamHTMLFileToResponse(
+      path.join(process.cwd(), "public", "progress-download.html")
+    )
   )
   .subscribe();
 

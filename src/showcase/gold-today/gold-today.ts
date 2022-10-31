@@ -1,5 +1,6 @@
 import { interval } from "rxjs";
 import { exhaustMap, map, share } from "rxjs/operators";
+import path from "path";
 import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
 import {
   httpCreateServer,
@@ -16,7 +17,9 @@ server$
       url: "/",
       method: "GET",
     }),
-    streamHTMLFileToResponse(`${process.cwd()}/public/gold-today.html`)
+    streamHTMLFileToResponse(
+      path.join(process.cwd(), "public", "gold-today.html")
+    )
   )
   .subscribe();
 
