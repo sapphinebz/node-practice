@@ -1,11 +1,42 @@
 import { MongoClient } from "mongodb";
 import {
-  fromEventPattern,
-  Observable,
+  defer,
   ReplaySubject,
-  share,
+  retry,
+  shareReplay,
   Subject,
+  takeUntil,
+  timer,
 } from "rxjs";
+
+export class MongoDBObservable {
+  private readonly onClose$ = new Subject<void>();
+  onConnected$ = defer(() => {
+    const client = new MongoClient(this.options.url);
+    console.log("connecting...");
+    return client.connect();
+  }).pipe(
+    retry({
+      delay: (err) => {
+        console.log("error:", err);
+        console.log("retry again");
+        return timer(3000);
+      },
+    }),
+    takeUntil(this.onClose$),
+    shareReplay(1)
+  );
+
+  constructor(public options: { url: string }) {
+    this.onClose$.subscribe(() => {
+      client.close();
+    });
+  }
+
+  close() {
+    this.onClose$.next();
+  }
+}
 
 // function connectToMongoDB() {
 //   return new Observable<MongoClient>((subscriber) => {

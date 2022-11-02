@@ -7,12 +7,12 @@ import { httpDownload } from "../../http/http-download";
 import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
 import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-response";
 
-const apiExpress = new AppExpress({ port: 4200 });
-const httpExpress = new AppExpress({ port: 3000 });
+const apiExpress = new AppExpress({ port: 3000 });
+const httpExpress = new AppExpress({ port: 4200 });
 
-const corsOptions = cors({
-  origin: "http://localhost:3000",
-});
+// const corsOptions = cors({
+//   origin: "http://localhost:4200",
+// });
 const _pdfPath = `${__dirname}/pdf/rxjs.pdf`;
 const downloadPdf$ = httpDownload(
   `https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf`,
@@ -28,10 +28,15 @@ httpExpress
   )
   .subscribe();
 
-apiExpress.options("/pdf", corsOptions).subscribe();
 apiExpress
-  .get("/pdf", corsOptions)
+  .options("/pdf")
+  .pipe(apiExpress.optionCorsOrigin("http://localhost:4200"))
+  .subscribe();
+
+apiExpress
+  .get("/pdf")
   .pipe(
+    apiExpress.setHeaderAllowOrigin("http://localhost:4200"),
     mergeMap((client) => {
       return concat(
         downloadPdf$,
@@ -45,19 +50,25 @@ apiExpress
   )
   .subscribe();
 
-apiExpress.options("/data", corsOptions).subscribe();
+apiExpress
+  .options("/data")
+  .pipe(apiExpress.optionCorsOrigin("http://localhost:4200"))
+  .subscribe();
 
-apiExpress.get("/data", corsOptions).subscribe((client) => {
-  client.response.status(200).json({
-    results: [
-      {
-        employeeId: 1,
-        employeeName: "Thanadit",
-      },
-      {
-        employeeId: 2,
-        employeeName: "Sowaluk",
-      },
-    ],
+apiExpress
+  .get("/data")
+  .pipe(apiExpress.setHeaderAllowOrigin("http://localhost:4200"))
+  .subscribe((client) => {
+    client.response.status(200).json({
+      results: [
+        {
+          employeeId: 1,
+          employeeName: "Thanadit",
+        },
+        {
+          employeeId: 2,
+          employeeName: "Sowaluk",
+        },
+      ],
+    });
   });
-});

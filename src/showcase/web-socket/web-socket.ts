@@ -1,5 +1,6 @@
-import { share, mergeMap, tap } from "rxjs/operators";
-import { responseHTML } from "../../http/response/response-html";
+import { pipe } from "rxjs";
+import { share, mergeMap, tap, shareReplay } from "rxjs/operators";
+import { Header } from "../../http/header/header";
 import {
   httpCreateServer,
   whenRoute,
@@ -19,17 +20,28 @@ server$
       url: "/",
       method: "GET",
     }),
-    mergeMap((client) => {
+    mergeMap(({ response }) => {
       return webSocketPage$.pipe(
         tap((html) => {
-          responseHTML(client.response, html as string);
+          response.writeHead(200, { ...Header.HTML });
+          response.write(html);
+          response.end();
         })
       );
     })
   )
   .subscribe();
 
-const webSocket = new WebSocketObservable({ port: 4000 });
-webSocket.clientMessage$.subscribe((message) => {
-  webSocket.boardcast(`${message}`);
+const webSocket = new WebSocketObservable({
+  port: 4000,
+  serverTransform: pipe(
+    shareReplay({
+      bufferSize: Infinity,
+      refCount: true,
+    })
+  ),
+});
+
+webSocket.clientMessage$.subscribe((messagePackage) => {
+  webSocket.boardcast(messagePackage);
 });

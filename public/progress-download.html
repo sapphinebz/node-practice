@@ -46,7 +46,7 @@
           exhaustMap(() => {
             percentEl.innerText = `pending...`;
             return XMLHttpRequestProgressDownload(
-              `http://localhost:4200/pdf`
+              `http://localhost:3000/pdf`
             ).pipe(
               catchError((err) => {
                 alert(err);
@@ -71,10 +71,10 @@
       fromEvent(downloadEl, "click")
         .pipe(
           exhaustMap(() => {
-            return fromFetch(`http://localhost:4200/pdf`, {
+            return fromFetch(`http://localhost:3000/pdf`, {
               method: "GET",
               headers: {
-                "Access-Control-Allow-Origin": "http://localhost:3000/",
+                "Access-Control-Allow-Origin": "http://localhost:4200/",
               },
               selector: (res) => res.blob(),
             }).pipe(
@@ -94,10 +94,10 @@
       fromEvent(fetchEl, "click")
         .pipe(
           exhaustMap(() => {
-            return fromFetch(`http://localhost:4200/data`, {
+            return fromFetch(`http://localhost:3000/data`, {
               method: "GET",
               headers: {
-                "Access-Control-Allow-Origin": "http://localhost:3000/",
+                "Access-Control-Allow-Origin": "http://localhost:4200/",
               },
               selector: (res) => res.json(),
             }).pipe(
@@ -127,7 +127,7 @@
           xhr.responseType = "blob";
           xhr.setRequestHeader(
             "Access-Control-Allow-Origin",
-            "http://localhost:3000/"
+            "http://localhost:4200/"
           );
 
           xhr.onprogress = (event) => {

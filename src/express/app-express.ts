@@ -1,6 +1,6 @@
 import express from "express";
 import { Query } from "express-serve-static-core";
-import { Observable, Subject } from "rxjs";
+import { MonoTypeOperatorFunction, Observable, Subject, tap } from "rxjs";
 
 export interface ClientRequestHttp {
   request: express.Request;
@@ -41,71 +41,112 @@ export class AppExpress {
     this.createServer(options.port);
   }
 
-  options(path: string, middleWare?: express.RequestHandler) {
-    const clientHttp$ = new Subject<ClientRequestHttp>();
-    if (middleWare) {
-      this.app.options(path, middleWare, (req, res) => {
-        clientHttp$.next({ request: req, response: res });
+  options(path: string) {
+    return this.createRouteObservable((next) => {
+      this.app.options(path, (request, response) => {
+        next({ request, response });
       });
-    } else {
-      this.app.options(path, (req, res) => {
-        clientHttp$.next({ request: req, response: res });
-      });
-    }
-    return new Observable<ClientRequestHttp>((subscriber) => {
-      return clientHttp$.subscribe(subscriber);
     });
   }
 
-  get(path: string, middleWare?: express.RequestHandler) {
-    const clientHttp$ = new Subject<ClientRequestHttp>();
-    if (middleWare) {
-      this.app.get(path, middleWare, (req, res) => {
-        clientHttp$.next({ request: req, response: res });
+  optionCorsOrigin(
+    origin: string
+  ): MonoTypeOperatorFunction<ClientRequestHttp> {
+    return tap(({ response }) => {
+      response.writeHead(204, {
+        // "Access-Control-Allow-Origin": "http://localhost:4200",
+        // "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Headers":
+          "access-control-allow-origin,Content-Type,Authorization",
+        // "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
       });
-    } else {
-      this.app.get(path, (req, res) => {
-        clientHttp$.next({ request: req, response: res });
-      });
-    }
+      response.end();
+    });
+  }
 
-    return new Observable<ClientRequestHttp>((subscriber) => {
-      return clientHttp$.subscribe(subscriber);
+  setHeaderAllowOrigin<T extends ClientRequestHttp>(
+    origin: string
+  ): MonoTypeOperatorFunction<T> {
+    return tap(({ response }) => {
+      response.setHeader("Access-Control-Allow-Origin", origin);
+    });
+  }
+
+  get(path: string) {
+    return this.createRouteObservable((next) => {
+      this.app.get(path, (request, response) => {
+        next({ request, response });
+      });
     });
   }
 
   post<TBody = any>(path: string) {
-    const clientHttp$ = new Subject<ClientHttpPost<TBody>>();
-    this.app.post(
-      path,
-      (req: TypedRequestBody<TBody>, res: express.Response) => {
-        clientHttp$.next({ request: req, response: res });
-      }
-    );
-
-    return new Observable<ClientHttpPost<TBody>>((subscriber) => {
-      return clientHttp$.subscribe(subscriber);
+    return this.createRouteObservable<ClientHttpPost<TBody>>((next) => {
+      this.app.post(
+        path,
+        (request: TypedRequestBody<TBody>, response: express.Response) => {
+          next({ request, response });
+        }
+      );
     });
   }
 
   delete(path: string) {
-    const clientHttp$ = new Subject<TypedRequestParam>();
-    this.app.delete(path, (req, res) => {
-      clientHttp$.next({ request: req, response: res, param: req.params });
-    });
-
-    return new Observable<TypedRequestParam>((subscriber) => {
-      return clientHttp$.subscribe(subscriber);
+    return this.createRouteObservable<TypedRequestParam>((next) => {
+      this.app.delete(path, (request, response) => {
+        next({ request, response, param: request.params });
+      });
     });
   }
 
+  // middleware pattern
+  // (req, res, next) => {
+  //   console.log('the response will be sent by the next function ...')
+  //   next()
+  // }
+
+  // notFound() {
+  //   const clientHttp$ = new Subject<ClientRequestHttp>();
+  //   this.app.use((req, res) => {
+  //     clientHttp$.next({ request: req, response: res });
+  //   });
+  //   return new Observable<ClientRequestHttp>((subscriber) => {
+  //     return clientHttp$.subscribe(subscriber);
+  //   });
+  // }
+
+  //routing
+  //https://expressjs.com/en/guide/routing.html
+
   notFound() {
-    const clientHttp$ = new Subject<ClientRequestHttp>();
-    this.app.use((req, res) => {
-      clientHttp$.next({ request: req, response: res });
+    return this.createRouteObservable((next) => {
+      const route = this.app.all("*", (request, response) => {
+        next({ request, response });
+      });
     });
-    return new Observable<ClientRequestHttp>((subscriber) => {
-      return clientHttp$.subscribe(subscriber);
+  }
+
+  createRouteObservable<T = ClientRequestHttp>(
+    project: (next: (clientRequest: T) => void) => void
+  ) {
+    let refCount = 0;
+    const clientHttp$ = new Subject<T>();
+
+    project((clientRequest) => {
+      clientHttp$.next(clientRequest);
+    });
+
+    return new Observable<T>((subscriber) => {
+      refCount++;
+      const subscription = clientHttp$.subscribe(subscriber);
+      return {
+        unsubscribe: () => {
+          refCount--;
+          subscription.unsubscribe();
+        },
+      };
     });
   }
 
@@ -116,3 +157,15 @@ export class AppExpress {
     return this.app;
   }
 }
+
+// app.use(express.static("public"));
+/**
+ * เป็นการบอกว่า ถ้าเล่นผ่าน localhost:4200 แบบ path ไม่มี
+ * จะไปอ่าน index.html ใน folder public ให้อัตโนมัติ โดยเราไม่ต้องเขียน route เอง
+ */
+
+// สร้าง Middle ware
+//  const logMethod: express.RequestHandler = (request, response, next) => {
+//   console.log("---method", request.method);
+//   next();
+// };
