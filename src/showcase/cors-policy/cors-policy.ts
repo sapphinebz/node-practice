@@ -1,30 +1,30 @@
 import path from "path";
 import { tap } from "rxjs/operators";
 import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
-import {
-  httpCreateServer,
-  whenRoute,
-} from "../../http/server/http-create-server";
+import { HttpCreateServer } from "../../http/server/http-create-server";
+// import {
+//   httpCreateServer,
+//   whenRoute,
+// } from "../../http/server/http-create-server";
 
-const frontendServer$ = httpCreateServer({ port: 4200 });
+// const frontendServer$ = httpCreateServer({ port: 4200 });
 
-frontendServer$
+const frontendServer = new HttpCreateServer({ port: 4200 });
+
+frontendServer
+  .get("/")
   .pipe(
-    whenRoute({ method: "GET", url: "/" }),
     streamHTMLFileToResponse(
       path.join(process.cwd(), "public", "cors-policy.html")
     )
   )
   .subscribe();
 
-const apiServer$ = httpCreateServer({ port: 3000 });
+const apiServer = new HttpCreateServer({ port: 3000 });
 
-apiServer$
+apiServer
+  .option("/api")
   .pipe(
-    whenRoute({
-      method: "OPTIONS",
-      url: "/api",
-    }),
     tap(({ request, response }) => {
       // const origin = request.headers["Access-Control-Allow-Origin"];
       // console.log("---header", request.headers);
@@ -45,12 +45,9 @@ apiServer$
   )
   .subscribe();
 
-apiServer$
+apiServer
+  .get("/api")
   .pipe(
-    whenRoute({
-      method: "GET",
-      url: "/api",
-    }),
     tap(({ response }) => {
       response.writeHead(200, {
         "Content-Type": "application/json",

@@ -1,25 +1,27 @@
 import { pipe } from "rxjs";
 import { share, mergeMap, tap, shareReplay } from "rxjs/operators";
 import { Header } from "../../http/header/header";
-import {
-  httpCreateServer,
-  whenRoute,
-} from "../../http/server/http-create-server";
+import { HttpCreateServer } from "../../http/server/http-create-server";
+// import {
+//   httpCreateServer,
+//   whenRoute,
+// } from "../../http/server/http-create-server";
 import { readStreamFile } from "../../read-file/read-stream-file";
 import { WebSocketObservable } from "../../web-socket/web-socket-observable";
 
-const server$ = httpCreateServer({ port: 4200 }).pipe(share());
+const apiServer = new HttpCreateServer({
+  port: 4200,
+});
+
+// const server$ = httpCreateServer({ port: 4200 }).pipe(share());
 
 const webSocketPage$ = readStreamFile(
   `${process.cwd()}/public/web-socket.html`
 );
 
-server$
+apiServer
+  .get("/")
   .pipe(
-    whenRoute({
-      url: "/",
-      method: "GET",
-    }),
     mergeMap(({ response }) => {
       return webSocketPage$.pipe(
         tap((html) => {

@@ -6,47 +6,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Server Sent Event</title>
     <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+    <style>
+      .notification-container {
+        position: relative;
+        cursor: pointer;
+      }
+      .notification {
+        width: 30px;
+        user-select: none;
+      }
+      .noti-number {
+        background-color: red;
+        color: white;
+        width: 20px;
+        height: 20px;
+        position: absolute;
+        right: -2px;
+        top: -20px;
+        display: flex;
+        place-content: center;
+        place-items: center;
+        border-radius: 50%;
+      }
+
+      .shaking {
+        /* Start the shake animation and make the animation last for 0.5 seconds */
+        animation: shake 0.5s;
+
+        /* When the animation is finished, start again */
+        animation-iteration-count: infinite;
+      }
+
+      @keyframes shake {
+        0% {
+          transform: translate(1px, 1px) rotate(0deg);
+        }
+        10% {
+          transform: translate(-1px, -2px) rotate(-1deg);
+        }
+        20% {
+          transform: translate(-3px, 0px) rotate(1deg);
+        }
+        30% {
+          transform: translate(3px, 2px) rotate(0deg);
+        }
+        40% {
+          transform: translate(1px, -1px) rotate(1deg);
+        }
+        50% {
+          transform: translate(-1px, 2px) rotate(-1deg);
+        }
+        60% {
+          transform: translate(-3px, 1px) rotate(0deg);
+        }
+        70% {
+          transform: translate(3px, 1px) rotate(-1deg);
+        }
+        80% {
+          transform: translate(-1px, -1px) rotate(1deg);
+        }
+        90% {
+          transform: translate(1px, 2px) rotate(0deg);
+        }
+        100% {
+          transform: translate(1px, -2px) rotate(-1deg);
+        }
+      }
+    </style>
   </head>
   <body>
     <h1>Sever Sent Events</h1>
+
     <template data-message-template>
       <div data-msg></div>
     </template>
-    <button data-join-button>Join Events</button>
-    <button data-leave-button>Leave Events</button>
+    <span class="notification-container">
+      <img
+        class="notification"
+        src="assets/images/notification-flat.png"
+        alt="notification"
+      />
+      <span class="noti-number"></span>
+    </span>
     <div data-messages></div>
     <script>
-      const { fromEvent, switchMap, map, share, finalize, takeUntil } = rxjs;
-      const messagesEl = document.querySelector("[data-messages]");
-      const joinButtonEl = document.querySelector("[data-join-button]");
-      const leaveButtonEl = document.querySelector("[data-leave-button]");
+      const {
+        fromEvent,
+        tap,
+        switchMap,
+        exhaustMap,
+        map,
+        share,
+        finalize,
+        takeUntil,
+        timer,
+        BehaviorSubject,
+      } = rxjs;
 
-      const clickJoin$ = fromEvent(joinButtonEl, "click");
-      const clickLeave$ = fromEvent(leaveButtonEl, "click");
-
-      const messages$ = clickJoin$.pipe(
-        switchMap(() => {
-          const events = new EventSource("http://localhost:4200/events");
-          return fromEvent(events, "open").pipe(
-            finalize(() => {
-              events.close();
-            }),
-            switchMap(() => {
-              return fromEvent(events, "message").pipe(
-                map((event) => event.data)
-              );
-            }),
-            takeUntil(clickLeave$)
-          );
-        })
-      );
-
-      messages$.subscribe((data) => {
-        const templateEl = document.querySelector("[data-message-template]");
-        const node = document.importNode(templateEl.content, true);
-        node.querySelector("[data-msg]").innerText = data;
-        messagesEl.appendChild(node);
+      const noti$ = new BehaviorSubject(0);
+      noti$.subscribe((noti) => {
+        const notiNumberEl = document.querySelector(
+          ".notification-container .noti-number"
+        );
+        if (noti === 0) {
+          notiNumberEl.style.visibility = "hidden";
+        } else {
+          notiNumberEl.style.visibility = "unset";
+          setNotiNumber(notiNumberEl, noti);
+        }
       });
+
+      const serverEvent$ = joinServerEvents(
+        "http://localhost:4200/events"
+      ).pipe(share());
+
+      let noti = noti$.value;
+      serverEvent$
+        .pipe(
+          tap(() => {
+            noti++;
+          }),
+          exhaustMap(() => {
+            return shakingAnimation();
+          })
+        )
+        .subscribe(() => {
+          noti$.next(noti);
+        });
+
+      function shakingAnimation() {
+        const imageNoti = document.querySelector(
+          ".notification-container .notification"
+        );
+        imageNoti.classList.add("shaking");
+        return timer(400).pipe(
+          tap(() => {
+            imageNoti.classList.remove("shaking");
+          })
+        );
+      }
+
+      function setNotiNumber(element, num) {
+        element.innerText = `${num}`;
+      }
+
+      function joinServerEvents(url) {
+        const events = new EventSource(url);
+        return fromEvent(events, "open").pipe(
+          finalize(() => {
+            events.close();
+          }),
+          switchMap(() => {
+            return fromEvent(events, "message").pipe(
+              map((event) => event.data)
+            );
+          })
+        );
+      }
     </script>
   </body>
 </html>
