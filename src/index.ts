@@ -6,7 +6,7 @@
 // import "./showcase/drag-drop/drag-drop.js";
 
 import { createWriteStream, createReadStream } from "fs";
-import { fromEvent, Observable } from "rxjs";
+import { concat, fromEvent, Observable, tap } from "rxjs";
 
 // import { MongoDBObservable } from "./mongo-database/mongoDB-observable";
 
@@ -52,6 +52,9 @@ import https from "https";
 import fs from "fs";
 import path from "path";
 import { HttpsClient } from "./http/http-client";
+import { Readable, ReadableOptions } from "stream";
+import writeTextFile from "./write-file/write-text-file";
+import { readTextFile } from "./read-file/read-text-file";
 
 // const request = https.get(
 //   "https://pokeapi.co/api/v2/pokemon/ditto",
@@ -62,22 +65,69 @@ import { HttpsClient } from "./http/http-client";
 //   }
 // );
 
-const httpsClient = new HttpsClient();
+/**
+ * create stream from Iterable
+ */
 
-const writeStream = fs.createWriteStream(path.join(__dirname, "rxjs.pdf"));
+// function* generator() {
+//   yield 10;
+//   yield 20;
+// }
 
-httpsClient
-  .progress(
-    "https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf",
-    {
-      pipeStream: (response) => {
-        response.pipe(writeStream);
-      },
-    }
-  )
-  .subscribe((response) => {
-    console.log(response.progress);
-  });
+// const stream = Readable.from(generator());
+// stream.on("data", (data) => {
+//   console.log(data);
+// });
+
+// stream.on("end", () => {
+//   console.log("end");
+// });
+
+/**
+ * create stream from AsyncIterable
+ */
+
+// async function* readHttp() {
+//   await delay(1000);
+//   yield "Hello";
+//   await delay(200);
+//   yield "World";
+// }
+
+// const httpStream = Readable.from(readHttp());
+// fromEvent(httpStream, "data").subscribe((value) => {
+//   const text = value as string;
+
+//   console.log(text);
+// });
+
+// const readStream = new ReadableStream({
+//   async start(controller) {
+//     await delay(1000);
+//     controller.enqueue("Hello");
+
+//     await delay(2000);
+//     controller.enqueue("World");
+//     controller.close();
+//   },
+// });
+
+// const httpsClient = new HttpsClient();
+
+// const writeStream = fs.createWriteStream(path.join(__dirname, "rxjs.pdf"));
+
+// httpsClient
+//   .progress(
+//     "https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf",
+//     {
+//       pipeStream: (response) => {
+//         response.pipe(writeStream);
+//       },
+//     }
+//   )
+//   .subscribe((response) => {
+//     console.log(response.progress);
+//   });
 
 // httpsClient
 //   .request({

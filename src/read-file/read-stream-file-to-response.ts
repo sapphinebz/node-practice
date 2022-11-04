@@ -21,7 +21,7 @@ export function readFileStreamToResponse(options: {
       subscriber.next();
       subscriber.complete();
     });
-    readStream.on("error", (err) => {
+    readStream.once("error", (err) => {
       subscriber.error(err);
     });
     readStream.pipe(response);

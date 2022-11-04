@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 
 export function readStreamFile(path: string) {
   return new Observable<string | Buffer>((subscriber) => {
-    const readStream = fs.createReadStream(path, { encoding: "utf8" });
+    const readStream = fs.createReadStream(path);
     // readStream.on("open", () => {
     //   console.log("open");
     // });
