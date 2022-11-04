@@ -1,9 +1,12 @@
-import "./showcase/server-sent-events.ts/server-sent-events.js";
+// import "./showcase/server-sent-events.ts/server-sent-events.js";
 // import "./showcase/gold-today/gold-today.js";
 // import "./showcase/web-socket/web-socket.js";
 // import "./showcase/progress-download/progress-download.js";
 // import "./showcase/cors-policy/cors-policy.js";
 // import "./showcase/drag-drop/drag-drop.js";
+
+import { createWriteStream, createReadStream } from "fs";
+import { fromEvent, Observable } from "rxjs";
 
 // import { MongoDBObservable } from "./mongo-database/mongoDB-observable";
 
@@ -37,3 +40,110 @@ import "./showcase/server-sent-events.ts/server-sent-events.js";
 // mongoDB.onConnected$.subscribe(() => {
 //   console.log("connected");
 // });
+
+// Adding a 'data' event handler.
+// Calling the stream.resume() method.
+// Calling the stream.pipe() method to send the data to a Writable.
+
+// const readStream = createReadStream("package.json");
+
+import http, { RequestOptions } from "http";
+import https from "https";
+import fs from "fs";
+import path from "path";
+import { HttpsClient } from "./http/http-client";
+
+// const request = https.get(
+//   "https://pokeapi.co/api/v2/pokemon/ditto",
+//   (response) => {
+//     response.on("data", (data) => {
+//       console.log(data);
+//     });
+//   }
+// );
+
+const httpsClient = new HttpsClient();
+
+const writeStream = fs.createWriteStream(path.join(__dirname, "rxjs.pdf"));
+
+httpsClient
+  .progress(
+    "https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf",
+    {
+      effect: (response) => {
+        response.pipe(writeStream);
+        return response;
+      },
+    }
+  )
+  .subscribe((response) => {
+    console.log(response.progress);
+  });
+
+// httpsClient
+//   .request({
+//     host: "pokeapi.co",
+//     path: "/api/v2/pokemon/ditto",
+//     method: "GET",
+//   })
+//   .subscribe((response) => {
+//     console.log(response);
+//   });
+
+// httpsClient.get("https://pokeapi.co/api/v2/pokemon/ditto").subscribe((data) => {
+//   console.log(data);
+// });
+
+// https
+//   .request(
+//     {
+//       host: "pokeapi.co",
+//       path: "/api/v2/pokemon/ditto",
+//       method: "GET",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//     },
+//     (response) => {
+//       // response.resume();
+//       response.on("data", (data) => {
+//         console.log(data);
+//       });
+//       response.on("end", () => {
+//         console.log("complete");
+//       });
+//     }
+//   )
+//   .end();
+
+// request({
+//   host: "https://pokeapi.co/api/v2/pokemon/ditto",
+//   method: "GET",
+// }).subscribe((data) => {
+//   console.log(data);
+// });
+
+// function request<T = any>(options: RequestOptions | string | URL) {
+//   return new Observable<T>((subscriber) => {
+//     const req = https.request(options, (res) => {
+//       //   res.resume();
+//       res.on("data", (data) => {
+//         subscriber.next(data);
+//       });
+//       res.on("error", (err) => {
+//         console.log(err);
+//       });
+//       res.on("end", () => {
+//         // if (!res.complete) {
+//         //   subscriber.error(
+//         //     new Error(
+//         //       "The connection was terminated while the message was still being sent"
+//         //     )
+//         //   );
+//         // } else {
+//         //   subscriber.complete();
+//         // }
+//       });
+//     });
+//   });
+// }
