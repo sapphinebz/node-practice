@@ -70,9 +70,8 @@ httpsClient
   .progress(
     "https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf",
     {
-      effect: (response) => {
+      pipeStream: (response) => {
         response.pipe(writeStream);
-        return response;
       },
     }
   )

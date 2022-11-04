@@ -4,7 +4,7 @@ import { AsyncSubject, Observable, Subscription, takeUntil } from "rxjs";
 import { fromListener } from "../operators/from-listener";
 
 export interface StreamRequestOptions {
-  effect: (response: IncomingMessage) => IncomingMessage;
+  pipeStream: (response: IncomingMessage) => void;
 }
 
 export class HttpsClient {
@@ -103,8 +103,8 @@ export class HttpsClient {
             let currentByte = 0;
             let chunks = "";
 
-            if (options?.effect) {
-              response = options.effect(response);
+            if (options?.pipeStream) {
+              options.pipeStream(response);
             }
 
             totalByte = parseInt(response.headers["content-length"] || `0`, 10);
