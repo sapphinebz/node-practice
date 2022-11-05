@@ -6,10 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "npx tsc",
-    "start:dev": "npm run clean && npm run compile && npm run start",
-    "start": "node ./dist/node/index.js",
     "clean": "rimraf ./dist",
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "start:api": "PORT=3000 npm run start",
+    "start": "npm run clean && npm run compile && npm run node-run",
+    "node-run": "node ./dist/node/index.js"
   },
   "keywords": [],
   "author": "",

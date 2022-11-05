@@ -1,14 +1,26 @@
 import http from "http";
 import { hostname } from "os";
-import { defer, MonoTypeOperatorFunction, Observable, Subject } from "rxjs";
-import { filter, share, tap } from "rxjs/operators";
+import {
+  defer,
+  MonoTypeOperatorFunction,
+  Observable,
+  OperatorFunction,
+  Subject,
+} from "rxjs";
+import { filter, map, share, tap } from "rxjs/operators";
 import * as NodeURL from "url";
 import * as NodePath from "path";
 import fs from "fs";
+import url from "url";
+import { ParsedUrlQuery } from "querystring";
 
 export interface ClientMessage {
   request: http.IncomingMessage;
   response: http.ServerResponse;
+}
+
+export interface QueryClientMessage extends ClientMessage {
+  query: ParsedUrlQuery | null;
 }
 
 export class HttpCreateServer extends Observable<void> {
@@ -93,6 +105,16 @@ export class HttpCreateServer extends Observable<void> {
   redirectTo(path: string): MonoTypeOperatorFunction<ClientMessage> {
     return tap(({ response }) => {
       response.writeHead(301, { Location: path }).end();
+    });
+  }
+
+  withQuery<T>(): OperatorFunction<ClientMessage, QueryClientMessage> {
+    return map((client) => {
+      if (client.request.url) {
+        const query = url.parse(client.request.url, true).query;
+        return { ...client, query };
+      }
+      return { ...client, query: null };
     });
   }
 

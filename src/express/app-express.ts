@@ -1,32 +1,35 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 import { Query } from "express-serve-static-core";
-import { MonoTypeOperatorFunction, Observable, Subject, tap } from "rxjs";
+import { ParsedUrlQuery } from "querystring";
+import {
+  MonoTypeOperatorFunction,
+  Observable,
+  OperatorFunction,
+  Subject,
+} from "rxjs";
+import { map, tap } from "rxjs/operators";
+import url from "url";
 
 export interface ClientRequestHttp {
   request: express.Request;
   response: express.Response;
 }
 
-export interface TypedRequestParam extends ClientRequestHttp {
+export interface ParamClientRequestHttp extends ClientRequestHttp {
   param: { [key: string]: string };
 }
 
-export interface TypedRequestBody<T> extends Express.Request {
+export interface BodyClientRequestHttp<T = any> extends ClientRequestHttp {
   body: T;
 }
 
-export interface TypedRequestQuery<T extends Query> extends Express.Request {
-  query: T;
+export interface QueryClientRequestHttp extends ClientRequestHttp {
+  query: ParsedUrlQuery | null;
 }
 
 export interface TypedRequest<T extends Query, U> extends Express.Request {
   body: U;
   query: T;
-}
-
-export interface ClientHttpPost<T> {
-  request: TypedRequestBody<T>;
-  response: express.Response;
 }
 
 export class AppExpress {
@@ -41,9 +44,33 @@ export class AppExpress {
     this.createServer(options.port);
   }
 
-  options(path: string) {
+  noCacheResponse() {
+    this.app.use(this.setHeaders({ "Cache-Control": "no-cache" }));
+  }
+
+  static(path: string) {
+    this.app.use(express.static(path));
+  }
+
+  redirectTo<T extends ClientRequestHttp>(
+    path: string
+  ): MonoTypeOperatorFunction<T> {
+    return tap(({ response }) => {
+      // response.writeHead(301, { Location: path }).end();
+      response.redirect(301, path);
+    });
+  }
+
+  options(path: string, options: { origin: string }) {
     return this.createRouteObservable((next) => {
       this.app.options(path, (request, response) => {
+        response.writeHead(204, {
+          "Access-Control-Allow-Origin": options.origin,
+          "Access-Control-Allow-Headers":
+            "access-control-allow-origin,Content-Type,Authorization",
+          "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+        });
+        response.end();
         next({ request, response });
       });
     });
@@ -83,21 +110,31 @@ export class AppExpress {
   }
 
   post<TBody = any>(path: string) {
-    return this.createRouteObservable<ClientHttpPost<TBody>>((next) => {
-      this.app.post(
-        path,
-        (request: TypedRequestBody<TBody>, response: express.Response) => {
-          next({ request, response });
-        }
-      );
+    return this.createRouteObservable<BodyClientRequestHttp<TBody>>((next) => {
+      this.app.post(path, (request, response) => {
+        next({ request, response, body: request.body });
+      });
     });
   }
 
   delete(path: string) {
-    return this.createRouteObservable<TypedRequestParam>((next) => {
+    return this.createRouteObservable<ParamClientRequestHttp>((next) => {
       this.app.delete(path, (request, response) => {
         next({ request, response, param: request.params });
       });
+    });
+  }
+
+  withQuery<T extends ClientRequestHttp>(): OperatorFunction<
+    T,
+    T & QueryClientRequestHttp
+  > {
+    return map((client) => {
+      if (client.request.url) {
+        const query = url.parse(client.request.url, true).query;
+        return { ...client, query };
+      }
+      return { ...client, query: null };
     });
   }
 
@@ -155,6 +192,16 @@ export class AppExpress {
       console.log(`Example app listening on port ${port}`);
     });
     return this.app;
+  }
+
+  /**
+   * MiddleWare
+   */
+  private setHeaders(headers: any): RequestHandler {
+    return (req, res, next) => {
+      res.set(headers);
+      next();
+    };
   }
 }
 

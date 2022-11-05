@@ -1,17 +1,11 @@
-// import "./showcase/server-sent-events.ts/server-sent-events.js";
+// import "./showcase/server-sent-events/server-sent-events.js";
 // import "./showcase/gold-today/gold-today.js";
 // import "./showcase/web-socket/web-socket.js";
 // import "./showcase/progress-download/progress-download.js";
 // import "./showcase/cors-policy/cors-policy.js";
 // import "./showcase/drag-drop/drag-drop.js";
-
-import { createWriteStream, createReadStream } from "fs";
-import { concat, fromEvent, Observable, tap } from "rxjs";
-
-// import { MongoDBObservable } from "./mongo-database/mongoDB-observable";
-
-// import { AppExpress } from "./express/app-express";
-
+// import "./showcase/stream-receivers/stream-receivers.js";
+// import "./showcase/upload-file/upload-file.js";
 // const issue2options = {
 //   origin: true,
 //   methods: ["POST"],
@@ -33,166 +27,31 @@ import { concat, fromEvent, Observable, tap } from "rxjs";
 // https://www.npmjs.com/package/googleapis
 // https://developers.google.com/sheets/api/quickstart/nodejs
 
-// const mongoDB = new MongoDBObservable({
-//   url: `mongodb+srv://thanadit:mon032goDB245279@cluster0.yndbzv3.mongodb.net/test`,
-// });
-
-// mongoDB.onConnected$.subscribe(() => {
-//   console.log("connected");
-// });
+// Readable streams which have emitted 'end' or 'close'.
+// Writable streams which have emitted 'finish' or 'close'.
 
 // Adding a 'data' event handler.
 // Calling the stream.resume() method.
 // Calling the stream.pipe() method to send the data to a Writable.
 
-// const readStream = createReadStream("package.json");
+// retry ในแบบ stream แหละ จะเริ่ม stream ใหม่ตั้งแต่ต้น
+// writer.once('drain', write);
 
-import http, { RequestOptions } from "http";
-import https from "https";
+// const zlib = require('node:zlib');
+// import zlib from 'zlib';
+
 import fs from "fs";
-import path from "path";
-import { HttpsClient } from "./http/http-client";
-import { Readable, ReadableOptions } from "stream";
-import writeTextFile from "./write-file/write-text-file";
-import { readTextFile } from "./read-file/read-text-file";
+import { takeUntil, timer } from "rxjs";
+import { fromWritable } from "./operators/from-writable";
+const writeStream = fs.createWriteStream(__dirname + "/text.txt");
 
-// const request = https.get(
-//   "https://pokeapi.co/api/v2/pokemon/ditto",
-//   (response) => {
-//     response.on("data", (data) => {
-//       console.log(data);
-//     });
-//   }
-// );
+setTimeout(() => {
+  writeStream.write("Hello");
+  writeStream.end();
+}, 5000);
 
-/**
- * create stream from Iterable
- */
-
-// function* generator() {
-//   yield 10;
-//   yield 20;
-// }
-
-// const stream = Readable.from(generator());
-// stream.on("data", (data) => {
-//   console.log(data);
-// });
-
-// stream.on("end", () => {
-//   console.log("end");
-// });
-
-/**
- * create stream from AsyncIterable
- */
-
-// async function* readHttp() {
-//   await delay(1000);
-//   yield "Hello";
-//   await delay(200);
-//   yield "World";
-// }
-
-// const httpStream = Readable.from(readHttp());
-// fromEvent(httpStream, "data").subscribe((value) => {
-//   const text = value as string;
-
-//   console.log(text);
-// });
-
-// const readStream = new ReadableStream({
-//   async start(controller) {
-//     await delay(1000);
-//     controller.enqueue("Hello");
-
-//     await delay(2000);
-//     controller.enqueue("World");
-//     controller.close();
-//   },
-// });
-
-// const httpsClient = new HttpsClient();
-
-// const writeStream = fs.createWriteStream(path.join(__dirname, "rxjs.pdf"));
-
-// httpsClient
-//   .progress(
-//     "https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf",
-//     {
-//       pipeStream: (response) => {
-//         response.pipe(writeStream);
-//       },
-//     }
-//   )
-//   .subscribe((response) => {
-//     console.log(response.progress);
-//   });
-
-// httpsClient
-//   .request({
-//     host: "pokeapi.co",
-//     path: "/api/v2/pokemon/ditto",
-//     method: "GET",
-//   })
-//   .subscribe((response) => {
-//     console.log(response);
-//   });
-
-// httpsClient.get("https://pokeapi.co/api/v2/pokemon/ditto").subscribe((data) => {
-//   console.log(data);
-// });
-
-// https
-//   .request(
-//     {
-//       host: "pokeapi.co",
-//       path: "/api/v2/pokemon/ditto",
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//     },
-//     (response) => {
-//       // response.resume();
-//       response.on("data", (data) => {
-//         console.log(data);
-//       });
-//       response.on("end", () => {
-//         console.log("complete");
-//       });
-//     }
-//   )
-//   .end();
-
-// request({
-//   host: "https://pokeapi.co/api/v2/pokemon/ditto",
-//   method: "GET",
-// }).subscribe((data) => {
-//   console.log(data);
-// });
-
-// function request<T = any>(options: RequestOptions | string | URL) {
-//   return new Observable<T>((subscriber) => {
-//     const req = https.request(options, (res) => {
-//       //   res.resume();
-//       res.on("data", (data) => {
-//         subscriber.next(data);
-//       });
-//       res.on("error", (err) => {
-//         console.log(err);
-//       });
-//       res.on("end", () => {
-//         // if (!res.complete) {
-//         //   subscriber.error(
-//         //     new Error(
-//         //       "The connection was terminated while the message was still being sent"
-//         //     )
-//         //   );
-//         // } else {
-//         //   subscriber.complete();
-//         // }
-//       });
-//     });
-//   });
-// }
+fromWritable(writeStream)
+  .pipe(takeUntil(timer(2000)))
+  .subscribe((value) => {
+    console.log("complete write");
+  });

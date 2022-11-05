@@ -10,6 +10,7 @@ import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-re
 const apiExpress = new AppExpress({ port: 3000 });
 const httpExpress = new AppExpress({ port: 4200 });
 
+const FRONT_END_ORIGIN = "http://localhost:4200";
 // const corsOptions = cors({
 //   origin: "http://localhost:4200",
 // });
@@ -28,10 +29,7 @@ httpExpress
   )
   .subscribe();
 
-apiExpress
-  .options("/pdf")
-  .pipe(apiExpress.optionCorsOrigin("http://localhost:4200"))
-  .subscribe();
+apiExpress.options("/pdf", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiExpress
   .get("/pdf")
@@ -50,10 +48,7 @@ apiExpress
   )
   .subscribe();
 
-apiExpress
-  .options("/data")
-  .pipe(apiExpress.optionCorsOrigin("http://localhost:4200"))
-  .subscribe();
+apiExpress.options("/data", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiExpress
   .get("/data")
