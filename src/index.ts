@@ -6,6 +6,7 @@
 // import "./showcase/drag-drop/drag-drop.js";
 // import "./showcase/stream-receivers/stream-receivers.js";
 // import "./showcase/upload-file/upload-file.js";
+import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
 // const issue2options = {
 //   origin: true,
 //   methods: ["POST"],
@@ -39,19 +40,3 @@
 
 // const zlib = require('node:zlib');
 // import zlib from 'zlib';
-
-import fs from "fs";
-import { takeUntil, timer } from "rxjs";
-import { fromWritable } from "./operators/from-writable";
-const writeStream = fs.createWriteStream(__dirname + "/text.txt");
-
-setTimeout(() => {
-  writeStream.write("Hello");
-  writeStream.end();
-}, 5000);
-
-fromWritable(writeStream)
-  .pipe(takeUntil(timer(2000)))
-  .subscribe((value) => {
-    console.log("complete write");
-  });
