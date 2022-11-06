@@ -9,6 +9,7 @@ import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-re
 
 const apiExpress = new AppExpress({ port: 3000 });
 const httpExpress = new AppExpress({ port: 4200 });
+httpExpress.static("public");
 
 const FRONT_END_ORIGIN = "http://localhost:4200";
 // const corsOptions = cors({
@@ -20,21 +21,12 @@ const downloadPdf$ = httpDownload(
   _pdfPath
 ).pipe(shareReplay(1));
 
-httpExpress
-  .get("/")
-  .pipe(
-    streamHTMLFileToResponse(
-      path.join(process.cwd(), "public", "progress-download.html")
-    )
-  )
-  .subscribe();
-
 apiExpress.options("/pdf", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiExpress
   .get("/pdf")
   .pipe(
-    apiExpress.setHeaderAllowOrigin("http://localhost:4200"),
+    apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN),
     mergeMap((client) => {
       return concat(
         downloadPdf$,
@@ -52,7 +44,7 @@ apiExpress.options("/data", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiExpress
   .get("/data")
-  .pipe(apiExpress.setHeaderAllowOrigin("http://localhost:4200"))
+  .pipe(apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN))
   .subscribe((client) => {
     client.response.status(200).json({
       results: [

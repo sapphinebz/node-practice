@@ -76,23 +76,6 @@ export class AppExpress {
     });
   }
 
-  optionCorsOrigin(
-    origin: string
-  ): MonoTypeOperatorFunction<ClientRequestHttp> {
-    return tap(({ response }) => {
-      response.writeHead(204, {
-        // "Access-Control-Allow-Origin": "http://localhost:4200",
-        // "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Headers":
-          "access-control-allow-origin,Content-Type,Authorization",
-        // "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-      });
-      response.end();
-    });
-  }
-
   setHeaderAllowOrigin<T extends ClientRequestHttp>(
     origin: string
   ): MonoTypeOperatorFunction<T> {
