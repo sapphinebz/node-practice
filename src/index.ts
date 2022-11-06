@@ -1,6 +1,6 @@
-import "./showcase/server-sent-events/server-sent-events.js";
+// import "./showcase/server-sent-events/server-sent-events.js";
 // import "./showcase/gold-today/gold-today.js";
-// import "./showcase/web-socket/web-socket.js";
+import "./showcase/web-socket/web-socket.js";
 // import "./showcase/progress-download/progress-download.js";
 // import "./showcase/cors-policy/cors-policy.js";
 // import "./showcase/drag-drop/drag-drop.js";

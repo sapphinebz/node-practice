@@ -4,67 +4,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home Page</title>
-    <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
-    <script defer>
-      const {
-        Observable,
-        webSocket: { webSocket },
-        fromEvent,
-        filter,
-        merge,
-      } = rxjs;
-
-      const subject = webSocket({
-        url: "ws://localhost:4000",
-        deserializer: ({ data }) => data,
-        serializer: (msg) => {
-          const nameEl = document.querySelector("[data-name ]");
-          return JSON.stringify({ channel: nameEl.value, msg: msg });
-        },
-        openObserver: {
-          next: () => {
-            // open connection client -> server
-            const messagerEl = document.querySelector("[data-messager]");
-            const sendEl = document.querySelector("[data-send]");
-
-            const click$ = fromEvent(sendEl, "click");
-            const enter$ = fromEvent(messagerEl, "keydown").pipe(
-              filter((event) => event.key === "Enter")
-            );
-
-            merge(click$, enter$).subscribe(() => {
-              subject.next(messagerEl.value);
-              messagerEl.value = "";
-            });
-          },
-        },
-      });
-
-      subject.subscribe((serverMessage) => {
-        const message = JSON.parse(serverMessage);
-
-        const messageEl = document.querySelector(`[data-message]`);
-
-        const divEl = document.createElement("div");
-        divEl.innerText = `${message.channel}: ${message.msg}`;
-        messageEl.appendChild(divEl);
-      });
-
-      // const connection = new WebSocket("ws://localhost:4000");
-      // connection.onopen = function () {
-      //   // จะทำงานเมื่อเชื่อมต่อสำเร็จ
-      //   console.log("connect webSocket");
-      //   connection.send("Hello ABCDEF"); // ส่ง Data ไปที่ Server
-      // };
-      // connection.onerror = function (error) {
-      //   console.error("WebSocket Error " + error);
-      // };
-      // connection.onmessage = function (e) {
-      //   // log ค่าที่ถูกส่งมาจาก server
-      //   console.log("message from server: ", e.data);
-      // };
-    </script>
+    <title>WebSocket</title>
+    <script type="module" src="./scripts/web-socket/script.js"></script>
   </head>
   <body>
     <div>
