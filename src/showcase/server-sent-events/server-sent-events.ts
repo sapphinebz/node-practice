@@ -1,17 +1,11 @@
 import { timer } from "rxjs";
-import { HttpCreateServer } from "../../http/server/http-create-server";
+import { AppExpress } from "../../express/app-express";
 import { ServerSentEvent } from "../../server-sent-events/server-sent-event";
 
-const apiServer = new HttpCreateServer({ port: 4200 });
+const apiExpress = new AppExpress({ port: 3000 });
+apiExpress.static("public");
 
-apiServer
-  .get("/")
-  .pipe(apiServer.redirectTo("/server-sent-events.html"))
-  .subscribe();
-
-apiServer.static("public").subscribe();
-
-const serverSentEvents$ = new ServerSentEvent(apiServer.get("/events"));
+const serverSentEvents$ = new ServerSentEvent(apiExpress.get("/events"));
 
 timer(0, getRandomArbitrary(2500, 5000)).subscribe((value) => {
   serverSentEvents$.boardcast(`${value}`);

@@ -1,4 +1,4 @@
-// import "./showcase/server-sent-events/server-sent-events.js";
+import "./showcase/server-sent-events/server-sent-events.js";
 // import "./showcase/gold-today/gold-today.js";
 // import "./showcase/web-socket/web-socket.js";
 // import "./showcase/progress-download/progress-download.js";
@@ -6,7 +6,8 @@
 // import "./showcase/drag-drop/drag-drop.js";
 // import "./showcase/stream-receivers/stream-receivers.js";
 // import "./showcase/upload-file/upload-file.js";
-import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
+// import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
+
 // const issue2options = {
 //   origin: true,
 //   methods: ["POST"],
@@ -40,3 +41,10 @@ import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
 
 // const zlib = require('node:zlib');
 // import zlib from 'zlib';
+
+// ย่อรูปด้วย sharp
+// const sharp = require('sharp')
+// await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toFile(__dirname + `/images/${req.file.originalname}`)
+
+// const appExpress = new AppExpress({ port: 3000 });
+// appExpress.static("public");

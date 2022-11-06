@@ -8,10 +8,11 @@ import {
   WsMessage,
 } from "../../web-socket/web-socket-observable";
 
-const apiExpress = new AppExpress({ port: 4200 });
+const apiExpress = new AppExpress({ port: 3000 });
 apiExpress.get("/").subscribe(({ response }) => {
   response.sendFile(path.join(process.cwd(), "public", "drag-drop.html"));
 });
+apiExpress.static("public");
 
 let state = {} as { [alt: string]: string };
 

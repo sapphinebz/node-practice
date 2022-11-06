@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "npx tsc",
     "clean": "rimraf ./dist",
-    "build": "npx tsc",
-    "start:api": "PORT=3000 npm run start",
-    "start": "npm run clean && npm run compile && npm run node-run",
+    "build:api": "npx tsc",
+    "build:web": "npx webpack --config webpack.config.js",
+    "build": "npm run build:web && npm run build:api",
+    "start": "PORT=3000 npm run clean && npm run build && npm run node-run",
     "node-run": "node ./dist/node/index.js"
   },
   "keywords": [],
@@ -30,6 +30,9 @@
     "@types/node": "^18.11.4",
     "@types/ws": "^8.5.3",
     "rimraf": "^3.0.2",
-    "typescript": "^4.8.4"
+    "ts-loader": "^9.4.1",
+    "typescript": "^4.8.4",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   }
 }

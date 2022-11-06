@@ -57,7 +57,7 @@ export class HttpCreateServer extends Observable<void> {
               return;
             }
 
-            let contentType = "text/plain";
+            let contentType = "";
 
             switch (ext) {
               case ".png":
@@ -66,11 +66,15 @@ export class HttpCreateServer extends Observable<void> {
               case ".html":
                 contentType = "text/html";
                 break;
+              case ".txt":
+                contentType = "text/plain";
             }
 
-            response.writeHead(200, {
-              "Content-Type": contentType,
-            });
+            if (contentType) {
+              response.setHeader("Content-Type", contentType);
+            }
+            response.writeHead(200);
+
             fs.readFile(directoryPath, function (err, content) {
               // Serving the image
               response.end(content);

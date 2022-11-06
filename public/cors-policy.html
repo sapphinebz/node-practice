@@ -5,54 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cors Policy</title>
+    <script type="module" src="./scripts//cors-policy/script.js"></script>
   </head>
   <body>
     <button data-fetch-btn>fetch</button>
     <div data-content></div>
-    <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
-    <script>
-      const {
-        fromEvent,
-        exhaustMap,
-        switchMap,
-        tap,
-        Observable,
-        takeLast,
-        catchError,
-        EMPTY,
-        fetch: { fromFetch },
-      } = rxjs;
-
-      const fetchBtnEl = document.querySelector("[data-fetch-btn]");
-      fromEvent(fetchBtnEl, "click")
-        .pipe(
-          switchMap(() => {
-            return fromFetch("http://localhost:3000/api", {
-              method: "GET",
-
-              headers: {
-                "Access-Control-Allow-Origin": "http://localhost:4200",
-              },
-              // credentials: "include",
-              selector: (res) => res.json(),
-            }).pipe(
-              catchError((err) => {
-                alert(err);
-                return EMPTY;
-              }),
-              tap(({ results }) => {
-                const contentEl = document.querySelector("[data-content]");
-                contentEl.innerHTML = ``;
-                for (const result of results) {
-                  const div = document.createElement("div");
-                  div.innerText = JSON.stringify(result);
-                  contentEl.appendChild(div);
-                }
-              })
-            );
-          })
-        )
-        .subscribe();
-    </script>
   </body>
 </html>
