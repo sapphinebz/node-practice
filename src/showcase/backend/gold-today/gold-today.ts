@@ -1,14 +1,14 @@
 import { interval } from "rxjs";
 import { exhaustMap, map, share } from "rxjs/operators";
 import path from "path";
-import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
+import { streamHTMLFileToResponse } from "../../../http/response/stream-html-file-to-response";
 // import {
 //   httpCreateServer,
 //   whenRoute,
 // } from "../../http/server/http-create-server";
-import { httpGet } from "../../http/server/http-get";
-import { ServerSentEvent } from "../../server-sent-events/server-sent-event";
-import { HttpCreateServer } from "../../http/server/http-create-server";
+import { httpGet } from "../../../http/server/http-get";
+import { ServerSentEvent } from "../../../server-sent-events/server-sent-event";
+import { HttpCreateServer } from "../../../http/server/http-create-server";
 
 // const server$ = httpCreateServer({ port: 4200 }).pipe(share());
 

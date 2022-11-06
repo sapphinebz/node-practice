@@ -1,11 +1,10 @@
 import cors from "cors";
 import { concat } from "rxjs";
 import { mergeMap, shareReplay } from "rxjs/operators";
-import { AppExpress } from "../../express/app-express";
 import path from "path";
-import { httpDownload } from "../../http/http-download";
-import { streamHTMLFileToResponse } from "../../http/response/stream-html-file-to-response";
-import { readFileStreamToResponse } from "../../read-file/read-stream-file-to-response";
+import { httpDownload } from "../../../http/http-download";
+import { AppExpress } from "../../../express/app-express";
+import { readFileStreamToResponse } from "../../../read-file/read-stream-file-to-response";
 
 const apiExpress = new AppExpress({ port: 3000 });
 const httpExpress = new AppExpress({ port: 4200 });

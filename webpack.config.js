@@ -1,13 +1,10 @@
 const path = require("path");
 const fs = require("fs");
-
-const WEB_SCRIPTS_PATH = "./src/web-scripts";
+const WEB_SCRIPTS_PATH = "./src/showcase/frontend";
 
 const readEntryPath = () => {
   let config = {};
-  const dirNameList = fs.readdirSync(
-    path.resolve(__dirname, "./src/web-scripts")
-  );
+  const dirNameList = fs.readdirSync(path.resolve(__dirname, WEB_SCRIPTS_PATH));
   for (const dirName of dirNameList) {
     config[dirName] = `${WEB_SCRIPTS_PATH}/${dirName}/script.ts`;
   }

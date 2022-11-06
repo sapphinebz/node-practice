@@ -290,13 +290,13 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexpo
 
 /***/ }),
 
-/***/ "./src/web-scripts/stream-receivers/script.ts":
-/*!****************************************************!*\
-  !*** ./src/web-scripts/stream-receivers/script.ts ***!
-  \****************************************************/
+/***/ "./src/showcase/frontend/stream-receivers/script.ts":
+/*!**********************************************************!*\
+  !*** ./src/showcase/frontend/stream-receivers/script.ts ***!
+  \**********************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-eval("\nvar __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }\nvar __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {\n    if (!Symbol.asyncIterator) throw new TypeError(\"Symbol.asyncIterator is not defined.\");\n    var g = generator.apply(thisArg, _arguments || []), i, q = [];\n    return i = {}, verb(\"next\"), verb(\"throw\"), verb(\"return\"), i[Symbol.asyncIterator] = function () { return this; }, i;\n    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }\n    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }\n    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }\n    function fulfill(value) { resume(\"next\", value); }\n    function reject(value) { resume(\"throw\", value); }\n    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }\n};\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\n// import {} from \"rxjs\";\n// import {} from \"rxjs/operators\";\nconst fetch_1 = __webpack_require__(/*! rxjs/fetch */ \"./node_modules/rxjs/dist/cjs/fetch/index.js\");\nconst channel = 1;\nconst streamReceiver$ = (0, fetch_1.fromFetch)(`/receive?channel=${channel}`, {\n    selector: function (res) {\n        return __asyncGenerator(this, arguments, function* () {\n            const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();\n            while (true) {\n                const { done, value } = yield __await(reader.read());\n                if (done)\n                    return yield __await(void 0);\n                yield yield __await(value);\n            }\n        });\n    },\n});\nconst receiverEl = document.querySelector(\"[data-receiver]\");\nstreamReceiver$.subscribe((value) => {\n    receiverEl.innerHTML += `<div>${value}</div>`;\n});\n\n\n//# sourceURL=webpack://testmongodb/./src/web-scripts/stream-receivers/script.ts?");
+eval("\nvar __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }\nvar __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {\n    if (!Symbol.asyncIterator) throw new TypeError(\"Symbol.asyncIterator is not defined.\");\n    var g = generator.apply(thisArg, _arguments || []), i, q = [];\n    return i = {}, verb(\"next\"), verb(\"throw\"), verb(\"return\"), i[Symbol.asyncIterator] = function () { return this; }, i;\n    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }\n    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }\n    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }\n    function fulfill(value) { resume(\"next\", value); }\n    function reject(value) { resume(\"throw\", value); }\n    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }\n};\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\n// import {} from \"rxjs\";\n// import {} from \"rxjs/operators\";\nconst fetch_1 = __webpack_require__(/*! rxjs/fetch */ \"./node_modules/rxjs/dist/cjs/fetch/index.js\");\nconst channel = 1;\nconst streamReceiver$ = (0, fetch_1.fromFetch)(`/receive?channel=${channel}`, {\n    selector: function (res) {\n        return __asyncGenerator(this, arguments, function* () {\n            const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();\n            while (true) {\n                const { done, value } = yield __await(reader.read());\n                if (done)\n                    return yield __await(void 0);\n                yield yield __await(value);\n            }\n        });\n    },\n});\nconst receiverEl = document.querySelector(\"[data-receiver]\");\nstreamReceiver$.subscribe((value) => {\n    receiverEl.innerHTML += `<div>${value}</div>`;\n});\n\n\n//# sourceURL=webpack://testmongodb/./src/showcase/frontend/stream-receivers/script.ts?");
 
 /***/ })
 
@@ -331,7 +331,7 @@ eval("\nvar __await = (this && this.__await) || function (v) { return this insta
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/web-scripts/stream-receivers/script.ts");
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/showcase/frontend/stream-receivers/script.ts");
 /******/ 	
 /******/ })()
 ;

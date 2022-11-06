@@ -2,11 +2,11 @@ import path from "path";
 
 import { pipe, ReplaySubject } from "rxjs";
 import { map, share } from "rxjs/operators";
-import { AppExpress } from "../../express/app-express";
+import { AppExpress } from "../../../express/app-express";
 import {
   WebSocketObservable,
   WsMessage,
-} from "../../web-socket/web-socket-observable";
+} from "../../../web-socket/web-socket-observable";
 
 const apiExpress = new AppExpress({ port: 3000 });
 apiExpress.get("/").subscribe(({ response }) => {

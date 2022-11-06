@@ -8,9 +8,25 @@
     <script type="module" src="./scripts/upload-file/script.js"></script>
   </head>
   <body>
-    upload: <input type="file" data-upload />
+    <h3>Single File Upload:</h3>
     <div>
-      <button data-submit>submit</button>
+      <input type="file" data-single-file-upload />
+      <div data-selected-single-file></div>
+      <button style="display: none" data-button-upload-single-file>
+        upload
+      </button>
+    </div>
+    <h3>Multiple Files Upload:</h3>
+    <div>
+      <input data-multiple-files-upload type="file" multiple />
+      <div data-selected-multiple-files></div>
+      <button style="display: none" data-button-upload-multiple-files>
+        upload
+      </button>
+    </div>
+    <h3>Single File Progress Upload</h3>
+    <div>
+      <input data-single-file-progress-upload type="file" />
     </div>
   </body>
 </html>

@@ -10,13 +10,13 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./src/web-scripts/index/script.ts":
-/*!*****************************************!*\
-  !*** ./src/web-scripts/index/script.ts ***!
-  \*****************************************/
+/***/ "./src/showcase/frontend/index/script.ts":
+/*!***********************************************!*\
+  !*** ./src/showcase/frontend/index/script.ts ***!
+  \***********************************************/
 /***/ (() => {
 
-eval("\nconsole.log(\"Hello Index.js\");\n\n\n//# sourceURL=webpack://testmongodb/./src/web-scripts/index/script.ts?");
+eval("\nconsole.log(\"Hello Index.js\");\n\n\n//# sourceURL=webpack://testmongodb/./src/showcase/frontend/index/script.ts?");
 
 /***/ })
 
@@ -27,7 +27,7 @@ eval("\nconsole.log(\"Hello Index.js\");\n\n\n//# sourceURL=webpack://testmongod
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
 /******/ 	var __webpack_exports__ = {};
-/******/ 	__webpack_modules__["./src/web-scripts/index/script.ts"]();
+/******/ 	__webpack_modules__["./src/showcase/frontend/index/script.ts"]();
 /******/ 	
 /******/ })()
 ;

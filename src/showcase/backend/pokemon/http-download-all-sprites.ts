@@ -1,6 +1,6 @@
 import { concatMap, from } from "rxjs";
 import { switchMap } from "rxjs/operators";
-import { httpDownload } from "../../http/http-download";
+import { httpDownload } from "../../../http/http-download";
 import { httpPaginatorPokemon } from "./http-paginator-pokemon";
 import { httpPokemonByUrl } from "./http-pokemon-by-url";
 import { EachPk_Response, Paginator } from "./model";

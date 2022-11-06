@@ -1,7 +1,7 @@
 import { interval } from "rxjs";
 import { mergeMap, takeUntil, tap, map, share } from "rxjs/operators";
-import { AppExpress } from "../../express/app-express";
-import { fromListener } from "../../operators/from-listener";
+import { AppExpress } from "../../../express/app-express";
+import { fromListener } from "../../../operators/from-listener";
 
 const appExpress = new AppExpress({ port: Number(process.env.PORT) || 3000 });
 appExpress

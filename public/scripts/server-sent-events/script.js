@@ -2270,13 +2270,13 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexpo
 
 /***/ }),
 
-/***/ "./src/web-scripts/server-sent-events/script.ts":
-/*!******************************************************!*\
-  !*** ./src/web-scripts/server-sent-events/script.ts ***!
-  \******************************************************/
+/***/ "./src/showcase/frontend/server-sent-events/script.ts":
+/*!************************************************************!*\
+  !*** ./src/showcase/frontend/server-sent-events/script.ts ***!
+  \************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst rxjs_1 = __webpack_require__(/*! rxjs */ \"./node_modules/rxjs/dist/cjs/index.js\");\nconst operators_1 = __webpack_require__(/*! rxjs/operators */ \"./node_modules/rxjs/dist/cjs/operators/index.js\");\nconst noti$ = new rxjs_1.BehaviorSubject(0);\nnoti$.subscribe((noti) => {\n    const notiNumberEl = document.querySelector(\".notification-container .noti-number\");\n    if (noti === 0) {\n        notiNumberEl.style.visibility = \"hidden\";\n    }\n    else {\n        notiNumberEl.style.visibility = \"unset\";\n        setNotiNumber(notiNumberEl, noti);\n    }\n});\nconst serverEvent$ = joinServerEvents(\"http://localhost:3000/events\").pipe((0, operators_1.share)());\nlet noti = noti$.value;\nserverEvent$\n    .pipe((0, operators_1.tap)(() => {\n    noti++;\n}), (0, operators_1.exhaustMap)(() => {\n    return shakingAnimation();\n}))\n    .subscribe(() => {\n    noti$.next(noti);\n});\nfunction shakingAnimation() {\n    const imageNoti = document.querySelector(\".notification-container .notification\");\n    imageNoti.classList.add(\"shaking\");\n    return (0, rxjs_1.timer)(400).pipe((0, operators_1.tap)(() => {\n        imageNoti.classList.remove(\"shaking\");\n    }));\n}\nfunction setNotiNumber(element, num) {\n    element.innerText = `${num}`;\n}\nfunction joinServerEvents(url) {\n    const events = new EventSource(url);\n    return (0, rxjs_1.fromEvent)(events, \"open\").pipe((0, operators_1.finalize)(() => {\n        events.close();\n    }), (0, operators_1.switchMap)(() => {\n        return (0, rxjs_1.fromEvent)(events, \"message\").pipe((0, operators_1.map)((event) => event.data));\n    }));\n}\n\n\n//# sourceURL=webpack://testmongodb/./src/web-scripts/server-sent-events/script.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst rxjs_1 = __webpack_require__(/*! rxjs */ \"./node_modules/rxjs/dist/cjs/index.js\");\nconst operators_1 = __webpack_require__(/*! rxjs/operators */ \"./node_modules/rxjs/dist/cjs/operators/index.js\");\nconst noti$ = new rxjs_1.BehaviorSubject(0);\nnoti$.subscribe((noti) => {\n    const notiNumberEl = document.querySelector(\".notification-container .noti-number\");\n    if (noti === 0) {\n        notiNumberEl.style.visibility = \"hidden\";\n    }\n    else {\n        notiNumberEl.style.visibility = \"unset\";\n        setNotiNumber(notiNumberEl, noti);\n    }\n});\nconst serverEvent$ = joinServerEvents(\"http://localhost:3000/events\").pipe((0, operators_1.share)());\nlet noti = noti$.value;\nserverEvent$\n    .pipe((0, operators_1.tap)(() => {\n    noti++;\n}), (0, operators_1.exhaustMap)(() => {\n    return shakingAnimation();\n}))\n    .subscribe(() => {\n    noti$.next(noti);\n});\nfunction shakingAnimation() {\n    const imageNoti = document.querySelector(\".notification-container .notification\");\n    imageNoti.classList.add(\"shaking\");\n    return (0, rxjs_1.timer)(400).pipe((0, operators_1.tap)(() => {\n        imageNoti.classList.remove(\"shaking\");\n    }));\n}\nfunction setNotiNumber(element, num) {\n    element.innerText = `${num}`;\n}\nfunction joinServerEvents(url) {\n    const events = new EventSource(url);\n    return (0, rxjs_1.fromEvent)(events, \"open\").pipe((0, operators_1.finalize)(() => {\n        events.close();\n    }), (0, operators_1.switchMap)(() => {\n        return (0, rxjs_1.fromEvent)(events, \"message\").pipe((0, operators_1.map)((event) => event.data));\n    }));\n}\n\n\n//# sourceURL=webpack://testmongodb/./src/showcase/frontend/server-sent-events/script.ts?");
 
 /***/ })
 
@@ -2311,7 +2311,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\ncons
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/web-scripts/server-sent-events/script.ts");
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/showcase/frontend/server-sent-events/script.ts");
 /******/ 	
 /******/ })()
 ;

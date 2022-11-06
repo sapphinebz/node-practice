@@ -1,4 +1,4 @@
-import { httpGet } from "../../http/server/http-get";
+import { httpGet } from "../../../http/server/http-get";
 import { Paginator, Pk_Response } from "./model";
 
 export function httpPaginatorPokemon(paginator: Paginator) {

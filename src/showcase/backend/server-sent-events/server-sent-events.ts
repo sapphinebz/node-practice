@@ -1,6 +1,6 @@
 import { timer } from "rxjs";
-import { AppExpress } from "../../express/app-express";
-import { ServerSentEvent } from "../../server-sent-events/server-sent-event";
+import { AppExpress } from "../../../express/app-express";
+import { ServerSentEvent } from "../../../server-sent-events/server-sent-event";
 
 const apiExpress = new AppExpress({ port: 3000 });
 apiExpress.static("public");

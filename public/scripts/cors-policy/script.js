@@ -2290,13 +2290,13 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexpo
 
 /***/ }),
 
-/***/ "./src/web-scripts/cors-policy/script.ts":
-/*!***********************************************!*\
-  !*** ./src/web-scripts/cors-policy/script.ts ***!
-  \***********************************************/
+/***/ "./src/showcase/frontend/cors-policy/script.ts":
+/*!*****************************************************!*\
+  !*** ./src/showcase/frontend/cors-policy/script.ts ***!
+  \*****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst rxjs_1 = __webpack_require__(/*! rxjs */ \"./node_modules/rxjs/dist/cjs/index.js\");\nconst fetch_1 = __webpack_require__(/*! rxjs/fetch */ \"./node_modules/rxjs/dist/cjs/fetch/index.js\");\nconst operators_1 = __webpack_require__(/*! rxjs/operators */ \"./node_modules/rxjs/dist/cjs/operators/index.js\");\nconst fetchBtnEl = document.querySelector(\"[data-fetch-btn]\");\nconst contentEl = document.querySelector(\"[data-content]\");\n(0, rxjs_1.fromEvent)(fetchBtnEl, \"click\")\n    .pipe((0, operators_1.switchMap)(() => {\n    return (0, fetch_1.fromFetch)(\"http://localhost:3000/api\", {\n        method: \"GET\",\n        headers: {\n            \"Access-Control-Allow-Origin\": \"http://localhost:4200\",\n        },\n        // credentials: \"include\",\n        selector: (res) => res.json(),\n    }).pipe((0, operators_1.catchError)((err) => {\n        alert(err);\n        return rxjs_1.EMPTY;\n    }), (0, operators_1.tap)(({ results }) => {\n        contentEl.innerHTML = ``;\n        for (const result of results) {\n            const div = document.createElement(\"div\");\n            div.innerText = JSON.stringify(result);\n            contentEl.appendChild(div);\n        }\n    }));\n}))\n    .subscribe();\n\n\n//# sourceURL=webpack://testmongodb/./src/web-scripts/cors-policy/script.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst rxjs_1 = __webpack_require__(/*! rxjs */ \"./node_modules/rxjs/dist/cjs/index.js\");\nconst fetch_1 = __webpack_require__(/*! rxjs/fetch */ \"./node_modules/rxjs/dist/cjs/fetch/index.js\");\nconst operators_1 = __webpack_require__(/*! rxjs/operators */ \"./node_modules/rxjs/dist/cjs/operators/index.js\");\nconst fetchBtnEl = document.querySelector(\"[data-fetch-btn]\");\nconst contentEl = document.querySelector(\"[data-content]\");\n(0, rxjs_1.fromEvent)(fetchBtnEl, \"click\")\n    .pipe((0, operators_1.switchMap)(() => {\n    return (0, fetch_1.fromFetch)(\"http://localhost:3000/api\", {\n        method: \"GET\",\n        headers: {\n            \"Access-Control-Allow-Origin\": \"http://localhost:4200\",\n        },\n        // credentials: \"include\",\n        selector: (res) => res.json(),\n    }).pipe((0, operators_1.catchError)((err) => {\n        alert(err);\n        return rxjs_1.EMPTY;\n    }), (0, operators_1.tap)(({ results }) => {\n        contentEl.innerHTML = ``;\n        for (const result of results) {\n            const div = document.createElement(\"div\");\n            div.innerText = JSON.stringify(result);\n            contentEl.appendChild(div);\n        }\n    }));\n}))\n    .subscribe();\n\n\n//# sourceURL=webpack://testmongodb/./src/showcase/frontend/cors-policy/script.ts?");
 
 /***/ })
 
@@ -2331,7 +2331,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\ncons
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/web-scripts/cors-policy/script.ts");
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/showcase/frontend/cors-policy/script.ts");
 /******/ 	
 /******/ })()
 ;
