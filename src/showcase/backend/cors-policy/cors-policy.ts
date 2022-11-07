@@ -1,25 +1,9 @@
-import path from "path";
 import { tap } from "rxjs/operators";
-import { streamHTMLFileToResponse } from "../../../http/response/stream-html-file-to-response";
 import { HttpCreateServer } from "../../../http/server/http-create-server";
-
-// import {
-//   httpCreateServer,
-//   whenRoute,
-// } from "../../http/server/http-create-server";
-
-// const frontendServer$ = httpCreateServer({ port: 4200 });
 
 const frontendServer = new HttpCreateServer({ port: 4200 });
 
-frontendServer
-  .get("/")
-  .pipe(
-    streamHTMLFileToResponse(
-      path.join(process.cwd(), "public", "cors-policy.html")
-    )
-  )
-  .subscribe();
+frontendServer.static("public").subscribe();
 
 const apiServer = new HttpCreateServer({ port: 3000 });
 
@@ -71,3 +55,18 @@ apiServer
     })
   )
   .subscribe();
+
+apiServer
+  .post("/api")
+  .pipe(apiServer.withJsonBody())
+  .subscribe(({ response, body }) => {
+    response.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "http://localhost:4200",
+    });
+    response.end(
+      JSON.stringify({
+        serverReceived: body,
+      })
+    );
+  });

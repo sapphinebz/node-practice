@@ -1,18 +1,20 @@
 import http from "http";
 import { hostname } from "os";
 import {
+  AsyncSubject,
   defer,
   MonoTypeOperatorFunction,
   Observable,
   OperatorFunction,
   Subject,
 } from "rxjs";
-import { filter, map, share, tap } from "rxjs/operators";
+import { filter, map, share, takeUntil, tap } from "rxjs/operators";
 import * as NodeURL from "url";
 import * as NodePath from "path";
 import fs from "fs";
 import url from "url";
 import { ParsedUrlQuery } from "querystring";
+import { fromListener } from "../../operators/from-listener";
 
 export interface ClientMessage {
   request: http.IncomingMessage;
@@ -68,6 +70,8 @@ export class HttpCreateServer extends Observable<void> {
                 break;
               case ".txt":
                 contentType = "text/plain";
+              case ".js":
+                contentType = "text/javascript; charset=utf-8";
             }
 
             if (contentType) {
@@ -112,7 +116,7 @@ export class HttpCreateServer extends Observable<void> {
     });
   }
 
-  withQuery<T>(): OperatorFunction<ClientMessage, QueryClientMessage> {
+  withQuery(): OperatorFunction<ClientMessage, QueryClientMessage> {
     return map((client) => {
       if (client.request.url) {
         const query = url.parse(client.request.url, true).query;
@@ -120,6 +124,49 @@ export class HttpCreateServer extends Observable<void> {
       }
       return { ...client, query: null };
     });
+  }
+
+  withJsonBody<T = any>() {
+    return (source: Observable<ClientMessage>) =>
+      new Observable<ClientMessage & { body: T }>((subscriber) => {
+        const onUnsubscribe$ = new AsyncSubject<void>();
+        const subscription = source.subscribe({
+          next: (client) => {
+            const { request } = client;
+            let body = "";
+            fromListener(request, "data")
+              .pipe(takeUntil(onUnsubscribe$))
+              .subscribe((data) => {
+                body += data;
+              });
+            fromListener(request, "end")
+              .pipe(takeUntil(onUnsubscribe$))
+              .subscribe(() => {
+                let json = null;
+                try {
+                  json = JSON.parse(body);
+                } catch (err) {
+                  subscriber.error(err);
+                }
+                if (json) {
+                  subscriber.next({ ...client, body: json });
+                  subscriber.complete();
+                }
+              });
+          },
+          error: (err) => {
+            subscriber.error(err);
+          },
+        });
+
+        return {
+          unsubscribe: () => {
+            subscription.unsubscribe();
+            onUnsubscribe$.next();
+            onUnsubscribe$.complete();
+          },
+        };
+      });
   }
 
   private createServer() {

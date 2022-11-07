@@ -8,7 +8,8 @@
 // import "./showcase/upload-file/upload-file.js";
 // import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
 
-import "./showcase/backend/upload-file/upload-file.js";
+// import "./showcase/backend/upload-file/upload-file.js";
+import "./showcase/backend/cors-policy/cors-policy.js";
 
 // const issue2options = {
 //   origin: true,
