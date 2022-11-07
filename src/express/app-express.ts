@@ -37,9 +37,11 @@ export class AppExpress {
 
   constructor(options: { port: number }) {
     this.app
-      .use(express.urlencoded({ extended: true }))
-      .use(express.json())
-      .use(express.raw());
+      // Parse URL-encoded bodies (as sent by HTML forms)
+      .use(express.urlencoded({ extended: true }));
+    // Parse JSON bodies (as sent by API clients)
+    // .use(express.json())
+    // .use(express.raw());
 
     this.createServer(options.port);
   }

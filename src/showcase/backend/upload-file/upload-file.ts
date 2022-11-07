@@ -71,3 +71,27 @@ appExpress.app.post(
     response.json({ message: "Successfully uploaded files" });
   }
 );
+
+/**
+ * Upload Sigle File Progress
+ */
+
+const progressStorage = multer.diskStorage({
+  destination: path.join(__dirname, "uploads"),
+  filename(req, file, callback) {
+    console.log("---body", req.body);
+    console.log("---file", file);
+    callback(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+appExpress.app.post(
+  "/upload-single-file-progress",
+  multer({
+    storage: progressStorage,
+  }).single("file"),
+  (request, response) => {
+    // console.log(request.body);
+    response.json({ message: "Successfully uploaded files" });
+  }
+);
