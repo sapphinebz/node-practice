@@ -67,3 +67,41 @@ fromEvent(httpPostFetchBtnEl, "click")
     })
   )
   .subscribe();
+
+const httpPostFormDataEl = document.querySelector<HTMLElement>(
+  "[data-http-post-form-data]"
+)!;
+
+const httpPostFetchFormDataBtnEl =
+  httpPostFormDataEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+
+const httpPostStatusFormDataEl =
+  httpPostFormDataEl.querySelector<HTMLElement>("[data-status]")!;
+
+fromEvent(httpPostFetchFormDataBtnEl, "click")
+  .pipe(
+    exhaustMap(() => {
+      const formData = new FormData();
+      formData.set("filename", "Hiiragi");
+      formData.set("food", "outpod");
+      return fromFetch("http://localhost:3000/api-form-data", {
+        method: "POST",
+        body: formData,
+        headers: {
+          // "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
+          "Access-Control-Allow-Origin": "http://localhost:4200",
+        },
+        // credentials: "include",
+        selector: (res) => res.json(),
+      }).pipe(
+        catchError((err) => {
+          return of(err);
+        }),
+        tap((response) => {
+          httpPostStatusFormDataEl.innerHTML = `${JSON.stringify(response)}`;
+        })
+      );
+    })
+  )
+  .subscribe();

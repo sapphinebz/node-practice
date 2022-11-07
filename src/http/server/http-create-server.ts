@@ -103,9 +103,21 @@ export class HttpCreateServer extends Observable<void> {
     );
   }
 
-  option(url: string) {
+  option(url: string, options: { origin: string }) {
     return this.clientMessage$.pipe(
       this.whenRoute({ method: "OPTIONS", url }),
+      tap(({ response }) => {
+        response.writeHead(204, {
+          // "Access-Control-Allow-Origin": "http://localhost:4200",
+          // "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Origin": options.origin,
+          "Access-Control-Allow-Headers":
+            "access-control-allow-origin,Content-Type,Authorization",
+          // "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+        });
+        response.end();
+      }),
       share()
     );
   }

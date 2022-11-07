@@ -7,28 +7,7 @@ frontendServer.static("public").subscribe();
 
 const apiServer = new HttpCreateServer({ port: 3000 });
 
-apiServer
-  .option("/api")
-  .pipe(
-    tap(({ request, response }) => {
-      // const origin = request.headers["Access-Control-Allow-Origin"];
-      // console.log("---header", request.headers);
-      // console.log("---origin", request.headers["origin"]);
-      // const origin = request.headers["origin"];
-      // 204 no content
-      response.writeHead(204, {
-        // "Access-Control-Allow-Origin": "http://localhost:4200",
-        // "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Origin": "http://localhost:4200",
-        "Access-Control-Allow-Headers":
-          "access-control-allow-origin,Content-Type,Authorization",
-        // "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-      });
-      response.end();
-    })
-  )
-  .subscribe();
+apiServer.option("/api", { origin: "http://localhost:4200" }).subscribe();
 
 apiServer
   .get("/api")
@@ -70,3 +49,35 @@ apiServer
       })
     );
   });
+
+apiServer
+  .option("/api-form-data", { origin: "http://localhost:4200" })
+  .subscribe();
+
+apiServer.post("/api-form-data").subscribe(({ request, response }) => {
+  // const chunks: any[] = [];
+  let chunks = "";
+  request.setEncoding("binary");
+  request.on("data", (chunk) => {
+    // chunks.push(chunk);
+    console.log("chunk", chunk);
+    chunks += chunk;
+  });
+  request.on("end", () => {
+    console.log("end:", chunks);
+    // JSON.stringify(chunks);
+    // const buffered = Buffer.concat(chunks) as any;
+    // console.log("---", buffered.get("filename"));
+    // console.log("--buffered", buffered);
+  });
+  const body = { result: true };
+  response.writeHead(200, {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "http://localhost:4200",
+  });
+  response.end(
+    JSON.stringify({
+      serverReceived: body,
+    })
+  );
+});
