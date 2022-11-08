@@ -14,7 +14,7 @@ export function fromXMLHttpRequestUpload(url: string, formData: FormData) {
     const progressHandler = (e: ProgressEvent<XMLHttpRequestEventTarget>) => {
       // upload progress as percentage
       let percent_completed = (e.loaded / e.total) * 100;
-      console.log(percent_completed);
+      // console.log(percent_completed);
       subscriber.next(percent_completed);
     };
     request.upload.addEventListener("progress", progressHandler);

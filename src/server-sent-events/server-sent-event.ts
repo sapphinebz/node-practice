@@ -29,12 +29,13 @@ export class ServerSentEvent<T = any> extends Subject<T> {
           // client close browser
           const clientClose$ = fromListener(request, "close");
 
-          return this.pipe(takeUntil(clientClose$)).pipe(
+          return this.pipe(
             tap((message) => {
               // const id = Date.now();
               // response.write(`id:${id}\ndata: ${JSON.stringify({ message })}\n\n`);
               response.write(`data: ${JSON.stringify({ message })}\n\n`);
-            })
+            }),
+            takeUntil(clientClose$)
           );
         }),
         takeUntil(this.onClose$)
