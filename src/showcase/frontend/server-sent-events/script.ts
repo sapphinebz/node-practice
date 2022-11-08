@@ -7,6 +7,7 @@ import {
   switchMap,
   tap,
 } from "rxjs/operators";
+import { fromEventSource } from "../shared/from-event-source";
 
 const noti$ = new BehaviorSubject(0);
 noti$.subscribe((noti) => {
@@ -21,7 +22,7 @@ noti$.subscribe((noti) => {
   }
 });
 
-const serverEvent$ = joinServerEvents("http://localhost:3000/events").pipe(
+const serverEvent$ = fromEventSource("http://localhost:3000/events").pipe(
   share()
 );
 
@@ -53,18 +54,4 @@ function shakingAnimation() {
 
 function setNotiNumber(element: HTMLElement, num: number) {
   element.innerText = `${num}`;
-}
-
-function joinServerEvents(url: string) {
-  const events = new EventSource(url);
-  return fromEvent(events, "open").pipe(
-    finalize(() => {
-      events.close();
-    }),
-    switchMap(() => {
-      return fromEvent<MessageEvent>(events, "message").pipe(
-        map((event) => event.data)
-      );
-    })
-  );
 }

@@ -1,6 +1,13 @@
 import { EMPTY, fromEvent, of } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import { catchError, exhaustMap, switchMap, tap } from "rxjs/operators";
+import {
+  catchError,
+  exhaustMap,
+  switchMap,
+  tap,
+  withLatestFrom,
+} from "rxjs/operators";
+import { fromUploadInput } from "../shared/from-upload-input";
 
 const httpGetEl = document.querySelector<HTMLElement>("[data-http-get]")!;
 
@@ -78,18 +85,28 @@ const httpPostFetchFormDataBtnEl =
 const httpPostStatusFormDataEl =
   httpPostFormDataEl.querySelector<HTMLElement>("[data-status]")!;
 
+const httpPostFetchFormDataFileEl =
+  httpPostFormDataEl.querySelector<HTMLInputElement>("[data-file]")!;
+
+const file$ = fromUploadInput(httpPostFetchFormDataFileEl, { multiple: false });
+
 fromEvent(httpPostFetchFormDataBtnEl, "click")
   .pipe(
-    exhaustMap(() => {
+    withLatestFrom(file$),
+    exhaustMap(([_, file]) => {
+      const index = file.name.lastIndexOf(".");
+      const ext = file.name.slice(index);
+
       const formData = new FormData();
-      formData.set("filename", "Hiiragi");
-      formData.set("food", "outpod");
+      formData.set("filename", "filename_value");
+      formData.set("file", "file_value");
+      formData.set("example", "example_value");
+      formData.set("example1", "example_value1");
+      formData.set("original", file, `Jungle${ext}`);
       return fromFetch("http://localhost:3000/api-form-data", {
         method: "POST",
         body: formData,
         headers: {
-          // "Content-Type": "application/json",
-          "Content-Type": "multipart/form-data",
           "Access-Control-Allow-Origin": "http://localhost:4200",
         },
         // credentials: "include",

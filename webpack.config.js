@@ -1,11 +1,15 @@
 const path = require("path");
 const fs = require("fs");
 const WEB_SCRIPTS_PATH = "./src/showcase/frontend";
+const IGNORE_DIR = ["shared"];
 
 const readEntryPath = () => {
   let config = {};
   const dirNameList = fs.readdirSync(path.resolve(__dirname, WEB_SCRIPTS_PATH));
   for (const dirName of dirNameList) {
+    if (IGNORE_DIR.includes(dirName)) {
+      continue;
+    }
     config[dirName] = `${WEB_SCRIPTS_PATH}/${dirName}/script.ts`;
   }
   return config;

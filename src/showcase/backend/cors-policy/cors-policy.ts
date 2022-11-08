@@ -1,13 +1,17 @@
+import path from "path";
 import { tap } from "rxjs/operators";
 import { HttpCreateServer } from "../../../http/server/http-create-server";
 
+const busboy = require("busboy");
 const frontendServer = new HttpCreateServer({ port: 4200 });
 
 frontendServer.static("public").subscribe();
 
 const apiServer = new HttpCreateServer({ port: 3000 });
 
-apiServer.option("/api", { origin: "http://localhost:4200" }).subscribe();
+const FRONT_END_ORIGIN = "http://localhost:4200";
+
+apiServer.option("/api", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiServer
   .get("/api")
@@ -15,7 +19,7 @@ apiServer
     tap(({ response }) => {
       response.writeHead(200, {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:4200",
+        "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
       });
       response.end(
         JSON.stringify({
@@ -41,7 +45,7 @@ apiServer
   .subscribe(({ response, body }) => {
     response.writeHead(200, {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "http://localhost:4200",
+      "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
     });
     response.end(
       JSON.stringify({
@@ -50,34 +54,25 @@ apiServer
     );
   });
 
-apiServer
-  .option("/api-form-data", { origin: "http://localhost:4200" })
-  .subscribe();
+apiServer.option("/api-form-data", { origin: FRONT_END_ORIGIN }).subscribe();
 
-apiServer.post("/api-form-data").subscribe(({ request, response }) => {
-  // const chunks: any[] = [];
-  let chunks = "";
-  request.setEncoding("binary");
-  request.on("data", (chunk) => {
-    // chunks.push(chunk);
-    console.log("chunk", chunk);
-    chunks += chunk;
-  });
-  request.on("end", () => {
-    console.log("end:", chunks);
-    // JSON.stringify(chunks);
-    // const buffered = Buffer.concat(chunks) as any;
-    // console.log("---", buffered.get("filename"));
-    // console.log("--buffered", buffered);
-  });
-  const body = { result: true };
-  response.writeHead(200, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "http://localhost:4200",
-  });
-  response.end(
-    JSON.stringify({
-      serverReceived: body,
+apiServer
+  .post("/api-form-data")
+  .pipe(
+    apiServer.withFormData({
+      filePath: ({ fieldname, file, info, request }) => {
+        return path.join(__dirname, "uploads", info.filename);
+      },
     })
-  );
-});
+  )
+  .subscribe(({ request, response, formData }) => {
+    response.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "http://localhost:4200",
+    });
+    response.end(
+      JSON.stringify({
+        serverReceived: formData,
+      })
+    );
+  });

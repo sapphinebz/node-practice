@@ -1,14 +1,8 @@
-import { EMPTY, fromEvent, Observable } from "rxjs";
+import { EMPTY, fromEvent } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import {
-  catchError,
-  exhaustMap,
-  filter,
-  map,
-  share,
-  switchMap,
-  tap,
-} from "rxjs/operators";
+import { catchError, exhaustMap, share, switchMap, tap } from "rxjs/operators";
+import { fromUploadInput } from "../shared/from-upload-input";
+import { fromXMLHttpRequestUpload } from "../shared/from-xml-http-request-upload";
 
 const inputSingleFileUploadEl = document.querySelector<HTMLInputElement>(
   "[data-single-file-upload]"
@@ -169,7 +163,7 @@ singleFileProgressUpload$
             const formData = new FormData();
             formData.set("file", file);
             formData.set("fileName", fileName);
-            return XMLHttpRequestUpload(
+            return fromXMLHttpRequestUpload(
               "/upload-single-file-progress",
               formData
             );
@@ -180,97 +174,6 @@ singleFileProgressUpload$
     })
   )
   .subscribe();
-
-function fromUploadInput(
-  element: HTMLInputElement,
-  mode: { multiple: false }
-): Observable<File>;
-function fromUploadInput(
-  element: HTMLInputElement,
-  mode: { multiple: true }
-): Observable<FileList>;
-function fromUploadInput(
-  element: HTMLInputElement,
-  mode: { multiple: boolean }
-) {
-  return fromEvent(element, "change").pipe(
-    filter(() => {
-      return element.files!.length > 0;
-    }),
-    map(() => {
-      if (mode.multiple) {
-        return element.files!;
-      }
-      return element.files![0];
-    })
-  );
-}
-
-function XMLHttpRequestUpload(url: string, formData: FormData) {
-  return new Observable<number>((subscriber) => {
-    let request = new XMLHttpRequest();
-    request.open("POST", url);
-    // request.setRequestHeader(
-    //   "Content-Type",
-    //   "application/x-www-form-urlencoded"
-    // );
-    // request.setRequestHeader("Content-Type", "multipart/form-data");
-
-    // upload progress event
-    const progressHandler = (e: ProgressEvent<XMLHttpRequestEventTarget>) => {
-      // upload progress as percentage
-      let percent_completed = (e.loaded / e.total) * 100;
-      console.log(percent_completed);
-      subscriber.next(percent_completed);
-    };
-    request.upload.addEventListener("progress", progressHandler);
-
-    const uploadCompleteHandler = (
-      event: ProgressEvent<XMLHttpRequestEventTarget>
-    ) => {
-      subscriber.complete();
-    };
-
-    request.upload.addEventListener("load", uploadCompleteHandler);
-
-    const uploadErrorHandler = (
-      event: ProgressEvent<XMLHttpRequestEventTarget>
-    ) => {
-      subscriber.error(event);
-    };
-    request.upload.addEventListener("error", uploadErrorHandler);
-
-    const uploadTimeoutHandler = (
-      event: ProgressEvent<XMLHttpRequestEventTarget>
-    ) => {
-      subscriber.error(new Error("timeout"));
-    };
-    request.upload.addEventListener("timeout", uploadTimeoutHandler);
-
-    // request finished event
-    const loadHandler = (e: ProgressEvent<XMLHttpRequestEventTarget>) => {
-      // HTTP status message (200, 404 etc)
-      console.log(request.status);
-
-      // request.response holds response from the server
-      console.log(request.response);
-    };
-    request.addEventListener("load", loadHandler);
-
-    // send POST request to server
-    request.send(formData);
-
-    return {
-      unsubscribe: () => {
-        request.upload.removeEventListener("progress", progressHandler);
-        request.upload.removeEventListener("load", uploadCompleteHandler);
-        request.upload.removeEventListener("error", uploadErrorHandler);
-        request.upload.removeEventListener("timeout", uploadTimeoutHandler);
-        request.removeEventListener("load", loadHandler);
-      },
-    };
-  });
-}
 
 // application/x-www-form-urlencoded
 // application/json

@@ -15,6 +15,20 @@ import fs from "fs";
 import url from "url";
 import { ParsedUrlQuery } from "querystring";
 import { fromListener } from "../../operators/from-listener";
+import { createFolderIfNotExist } from "../../folder/create-folder-if-not-exist";
+import { Readable } from "stream";
+export interface BusBoyInfo {
+  filename: string;
+  encoding: string;
+  mimeType: string;
+}
+
+export interface BusBoyIncomingFile {
+  fieldname: string;
+  file: any;
+  info: BusBoyInfo;
+  request: http.IncomingMessage;
+}
 
 export interface ClientMessage {
   request: http.IncomingMessage;
@@ -125,6 +139,7 @@ export class HttpCreateServer extends Observable<void> {
   redirectTo(path: string): MonoTypeOperatorFunction<ClientMessage> {
     return tap(({ response }) => {
       response.writeHead(301, { Location: path }).end();
+      // res.writeHead(303, { Connection: 'close', Location: '/' });
     });
   }
 
@@ -176,6 +191,82 @@ export class HttpCreateServer extends Observable<void> {
             subscription.unsubscribe();
             onUnsubscribe$.next();
             onUnsubscribe$.complete();
+          },
+        };
+      });
+  }
+
+  // https://www.npmjs.com/package/busboy
+  withFormData<T = any>(fileOptions?: {
+    filePath: (busboyFile: BusBoyIncomingFile) => string;
+    // onData: (buffer: string | Buffer, busboyFile: BusBoyIncomingFile) => void;
+  }) {
+    const busboy = require("busboy");
+    return (source: Observable<ClientMessage>) =>
+      new Observable<ClientMessage & { formData: T }>((subscriber) => {
+        let bb: any;
+        const subscription = source.subscribe({
+          next: (client) => {
+            const { request, response } = client;
+            let formData = {} as any;
+
+            try {
+              bb = busboy({ headers: request.headers });
+            } catch (err) {
+              subscriber.error(err);
+            }
+
+            // fieldname, fileStream, filename, encoding, mimetype
+            // ตัวไหนเป็น file มันเข้าอันนี้เอง
+            if (fileOptions?.filePath) {
+              bb.on(
+                "file",
+                (fieldname: string, file: Readable, info: BusBoyInfo) => {
+                  const { filename, encoding, mimeType } = info;
+                  console.log(
+                    `File [${fieldname}]: filename: %j, encoding: %j, mimeType: %j`,
+                    filename,
+                    encoding,
+                    mimeType
+                  );
+                  const filePath = fileOptions.filePath({
+                    fieldname,
+                    file,
+                    info,
+                    request,
+                  });
+                  createFolderIfNotExist(filePath);
+                  const writeStream = fs.createWriteStream(filePath);
+                  file.pipe(writeStream);
+                  // file
+                  //   .on("data", (data: any) => {
+                  //     writeStream.write(data);
+                  //     console.log(`File [${fieldname}] got ${data.length} bytes`);
+                  //   })
+                  //   .on("close", () => {
+                  //     writeStream.end();
+                  //     console.log(`File [${fieldname}] done`);
+                  //   });
+                }
+              );
+            }
+
+            bb.on("field", (name: string, val: any, info: any) => {
+              formData[name] = val;
+            });
+            bb.on("close", () => {
+              subscriber.next({ ...client, formData });
+              subscriber.complete();
+              request.unpipe(bb);
+            });
+            request.pipe(bb);
+          },
+        });
+
+        return {
+          unsubscribe: () => {
+            subscription.unsubscribe();
+            bb.removeAllListeners();
           },
         };
       });
