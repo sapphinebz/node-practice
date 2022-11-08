@@ -1,124 +1,194 @@
-import { EMPTY, fromEvent, of } from "rxjs";
+import { EMPTY, fromEvent, of, ReplaySubject, Subject } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
 import {
   catchError,
   exhaustMap,
+  map,
+  mergeWith,
+  share,
   switchMap,
   tap,
   withLatestFrom,
 } from "rxjs/operators";
+import { fromFileToURL } from "../shared/from-file-to-url";
 import { fromUploadInput } from "../shared/from-upload-input";
 
-const httpGetEl = document.querySelector<HTMLElement>("[data-http-get]")!;
+{
+  const containerEl = document.querySelector<HTMLElement>("[data-http-get]")!;
 
-const fetchBtnEl =
-  httpGetEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
-const contentEl = httpGetEl.querySelector<HTMLDivElement>("[data-content]")!;
+  const fetchButtonEl =
+    containerEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
 
-fromEvent(fetchBtnEl, "click")
-  .pipe(
-    switchMap(() => {
-      return fromFetch("http://localhost:3000/api", {
-        method: "GET",
+  const contentEl =
+    containerEl.querySelector<HTMLDivElement>("[data-content]")!;
 
-        headers: {
-          "Access-Control-Allow-Origin": "http://localhost:4200",
-        },
-        // credentials: "include",
-        selector: (res) => res.json(),
-      }).pipe(
-        catchError((err) => {
-          alert(err);
-          return EMPTY;
-        }),
-        tap(({ results }) => {
-          contentEl.innerHTML = ``;
-          for (const result of results) {
-            const div = document.createElement("div");
-            div.innerText = JSON.stringify(result);
-            contentEl.appendChild(div);
-          }
-        })
-      );
+  fromEvent(fetchButtonEl, "click")
+    .pipe(
+      switchMap(() => {
+        return fromFetch("http://localhost:3000/api", {
+          method: "GET",
+
+          headers: {
+            "Access-Control-Allow-Origin": "http://localhost:4200",
+          },
+          // credentials: "include",
+          selector: (res) => res.json(),
+        }).pipe(
+          catchError((err) => {
+            alert(err);
+            return EMPTY;
+          }),
+          tap(({ results }) => {
+            contentEl.innerHTML = ``;
+            for (const result of results) {
+              const div = document.createElement("div");
+              div.innerText = JSON.stringify(result);
+              contentEl.appendChild(div);
+            }
+          })
+        );
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>("[data-http-post]")!;
+  const fetchButtonEl =
+    containerEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+
+  const statusEl = containerEl.querySelector<HTMLElement>("[data-status]")!;
+
+  fromEvent(fetchButtonEl, "click")
+    .pipe(
+      exhaustMap(() => {
+        return fromFetch("http://localhost:3000/api", {
+          method: "POST",
+          body: JSON.stringify({ queryId: 1042, name: "Thanadit" }),
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "http://localhost:4200",
+          },
+          // credentials: "include",
+          selector: (res) => res.json(),
+        }).pipe(
+          catchError((err) => {
+            return of(err);
+          }),
+          tap((response) => {
+            statusEl.innerHTML = `${JSON.stringify(response)}`;
+          })
+        );
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    "[data-http-post-form-data]"
+  )!;
+
+  const fetchButtonEl =
+    containerEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+
+  const statusEl = containerEl.querySelector<HTMLElement>("[data-status]")!;
+
+  const fileEl = containerEl.querySelector<HTMLInputElement>("[data-file]")!;
+
+  const fileContainerEl = containerEl.querySelector<HTMLInputElement>(
+    "[data-file-container]"
+  )!;
+
+  const file$ = fromUploadInput(fileEl, {
+    multiple: false,
+  }).pipe(
+    share({
+      connector: () => new ReplaySubject(1),
     })
-  )
-  .subscribe();
+  );
 
-const httpPostEl = document.querySelector<HTMLElement>("[data-http-post]")!;
-const httpPostFetchBtnEl =
-  httpPostEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+  let image: HTMLImageElement;
 
-const httpPostStatusEl =
-  httpPostEl.querySelector<HTMLElement>("[data-status]")!;
+  const onUploaded$ = new Subject<void>();
 
-fromEvent(httpPostFetchBtnEl, "click")
-  .pipe(
-    exhaustMap(() => {
-      return fromFetch("http://localhost:3000/api", {
-        method: "POST",
-        body: JSON.stringify({ queryId: 1042, name: "Thanadit" }),
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "http://localhost:4200",
-        },
-        // credentials: "include",
-        selector: (res) => res.json(),
-      }).pipe(
-        catchError((err) => {
-          return of(err);
-        }),
-        tap((response) => {
-          httpPostStatusEl.innerHTML = `${JSON.stringify(response)}`;
-        })
-      );
-    })
-  )
-  .subscribe();
+  onUploaded$.subscribe(() => {
+    fileEl.value = "";
+  });
 
-const httpPostFormDataEl = document.querySelector<HTMLElement>(
-  "[data-http-post-form-data]"
-)!;
+  file$
+    .pipe(
+      mergeWith(onUploaded$.pipe(map(() => null))),
+      switchMap((file) => {
+        if (image) {
+          image.remove();
+        }
+        if (file && isImage(file)) {
+          return fromFileToURL(file).pipe(
+            tap({
+              next: (url) => {
+                image = document.createElement("img");
+                image.src = url;
+                image.style.width = "150px";
+                fileContainerEl.insertAdjacentElement("afterend", image);
+              },
+            })
+          );
+        } else if (file && isPdf(file)) {
+          image = document.createElement("img");
+          image.src = "/assets/images/pdf-icon.png";
+          image.style.width = "150px";
+          fileContainerEl.insertAdjacentElement("afterend", image);
+        }
+        return EMPTY;
+      })
+    )
+    .subscribe();
 
-const httpPostFetchFormDataBtnEl =
-  httpPostFormDataEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+  fromEvent(fetchButtonEl, "click")
+    .pipe(
+      withLatestFrom(file$),
+      exhaustMap(([_, file]) => {
+        const index = file.name.lastIndexOf(".");
+        const ext = file.name.slice(index);
 
-const httpPostStatusFormDataEl =
-  httpPostFormDataEl.querySelector<HTMLElement>("[data-status]")!;
+        const formData = new FormData();
+        formData.set("filename", "filename_value");
+        formData.set("file", "file_value");
+        formData.set("example", "example_value");
+        formData.set("example1", "example_value1");
+        formData.set("original", file, `Jungle${ext}`);
+        return fromFetch("http://localhost:3000/api-form-data", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Access-Control-Allow-Origin": "http://localhost:4200",
+          },
+          // credentials: "include",
+          selector: (res) => res.json(),
+        }).pipe(
+          catchError((err) => {
+            return of(err);
+          }),
+          tap((response) => {
+            onUploaded$.next();
+            // statusEl.innerHTML = `${JSON.stringify(response)}`;
+            statusEl.innerHTML = `uploaded successfully!`;
+          })
+        );
+      })
+    )
+    .subscribe();
+}
 
-const httpPostFetchFormDataFileEl =
-  httpPostFormDataEl.querySelector<HTMLInputElement>("[data-file]")!;
+function isImage(file: File) {
+  const index = file.name.lastIndexOf(".");
+  const ext = file.name.slice(index);
+  return [".jpeg", ".png", ".jpg"].includes(ext);
+}
 
-const file$ = fromUploadInput(httpPostFetchFormDataFileEl, { multiple: false });
-
-fromEvent(httpPostFetchFormDataBtnEl, "click")
-  .pipe(
-    withLatestFrom(file$),
-    exhaustMap(([_, file]) => {
-      const index = file.name.lastIndexOf(".");
-      const ext = file.name.slice(index);
-
-      const formData = new FormData();
-      formData.set("filename", "filename_value");
-      formData.set("file", "file_value");
-      formData.set("example", "example_value");
-      formData.set("example1", "example_value1");
-      formData.set("original", file, `Jungle${ext}`);
-      return fromFetch("http://localhost:3000/api-form-data", {
-        method: "POST",
-        body: formData,
-        headers: {
-          "Access-Control-Allow-Origin": "http://localhost:4200",
-        },
-        // credentials: "include",
-        selector: (res) => res.json(),
-      }).pipe(
-        catchError((err) => {
-          return of(err);
-        }),
-        tap((response) => {
-          httpPostStatusFormDataEl.innerHTML = `${JSON.stringify(response)}`;
-        })
-      );
-    })
-  )
-  .subscribe();
+function isPdf(file: File) {
+  const index = file.name.lastIndexOf(".");
+  const ext = file.name.slice(index);
+  return [".pdf"].includes(ext);
+}

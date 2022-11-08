@@ -19,9 +19,16 @@
       <span data-status></span>
     </div>
     <h3>Http Post Form Data</h3>
-    <div data-http-post-form-data>
-      <input type="file" data-file />
-      <button data-fetch-btn>post</button>
+    <div
+      data-http-post-form-data
+      style="display: flex; flex-direction: column; row-gap: 0.5rem"
+    >
+      <div data-file-container>
+        <input type="file" data-file />
+      </div>
+      <div>
+        <button data-fetch-btn>Upload</button>
+      </div>
       <span data-status></span>
     </div>
   </body>
