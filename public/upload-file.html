@@ -8,23 +8,19 @@
     <script type="module" src="./scripts/upload-file/script.js"></script>
   </head>
   <body>
-    <h3>Single File Upload:</h3>
-    <div>
-      <input type="file" data-single-file-upload />
-      <div data-selected-single-file></div>
-      <button style="display: none" data-button-upload-single-file>
-        upload
-      </button>
+    <h3>Single File Upload(Attached File on Body):</h3>
+    <div data-single-file-attached-body>
+      <input type="file" data-input-file />
+      <div data-selected></div>
+      <button style="display: none" data-upload-button>upload</button>
     </div>
     <h3>Multiple Files Upload:</h3>
-    <div>
-      <input data-multiple-files-upload type="file" multiple />
-      <div data-selected-multiple-files></div>
-      <button style="display: none" data-button-upload-multiple-files>
-        upload
-      </button>
+    <div data-multiple-files-upload>
+      <input data-input-file type="file" multiple />
+      <div data-selected></div>
+      <button style="display: none" data-button-upload>upload</button>
     </div>
-    <h3>Single File Progress Upload</h3>
+    <h3>Single File Progress Upload:</h3>
     <div data-single-file-progress>
       <input data-upload type="file" />
       <div style="display: none" data-file-name-container>

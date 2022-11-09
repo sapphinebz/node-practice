@@ -2,9 +2,17 @@ import fs from "fs";
 import path from "path";
 import { AppExpress } from "../../../express/app-express";
 import { createFolderIfNotExist } from "../../../folder/create-folder-if-not-exist";
-import multer from "multer";
+import { UploadMulter } from "../../../multer/upload-multer";
 
 const appExpress = new AppExpress({ port: 3000 });
+const uploadMulter = new UploadMulter({
+  destination: path.join(__dirname, "uploads"),
+  filename: (request, file) => `${Date.now()}-${file.originalname}`,
+});
+appExpress
+  .get("/")
+  .pipe(appExpress.redirectTo("/upload-file.html"))
+  .subscribe();
 
 appExpress.static("public");
 
@@ -53,45 +61,20 @@ appExpress.post("/upload-single-file").subscribe(({ request, response }) => {
  * Upload Multiple Files
  */
 
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, "uploads"),
-  filename(req, file, callback) {
-    callback(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const uploadMiddelWare = multer({
-  storage: storage,
-});
-
-appExpress.app.post(
-  "/upload-multiple-files",
-  uploadMiddelWare.array("files"),
-  (request, response) => {
+appExpress
+  .post("/upload-multiple-files")
+  .pipe(uploadMulter.uploadMultipleFiles("files"))
+  .subscribe(({ request, response }) => {
     response.json({ message: "Successfully uploaded files" });
-  }
-);
+  });
 
 /**
  * Upload Sigle File Progress
  */
 
-const progressStorage = multer.diskStorage({
-  destination: path.join(__dirname, "uploads"),
-  filename(req, file, callback) {
-    console.log("---body", req.body);
-    console.log("---file", file);
-    callback(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-appExpress.app.post(
-  "/upload-single-file-progress",
-  multer({
-    storage: progressStorage,
-  }).single("file"),
-  (request, response) => {
-    // console.log(request.body);
+appExpress
+  .post("/upload-single-file-progress")
+  .pipe(uploadMulter.uploadSingleFile("file"))
+  .subscribe(({ request, response }) => {
     response.json({ message: "Successfully uploaded files" });
-  }
-);
+  });

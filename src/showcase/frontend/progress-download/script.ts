@@ -83,6 +83,32 @@ fromEvent<PointerEvent>(fetchEl, "click")
     }
   });
 
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    `[data-download-express]`
+  )!;
+  const downloadEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-download-button]"
+  )!;
+
+  fromEvent<PointerEvent>(downloadEl, "click")
+    .pipe(
+      exhaustMap(() =>
+        fromFetch(`http://localhost:3000/package`, {
+          headers: {
+            "Access-Control-Allow-Origin": "http://localhost:4200/",
+          },
+          selector: (resp) => resp.blob(),
+        }).pipe(
+          tap((blob) => {
+            clickAnchorWithBlob(blob, "package.json");
+          })
+        )
+      )
+    )
+    .subscribe();
+}
+
 function XMLHttpRequestProgressDownload(url: string) {
   return new Observable<{ data: any; percent: number }>((subscriber) => {
     let xhr = new XMLHttpRequest();

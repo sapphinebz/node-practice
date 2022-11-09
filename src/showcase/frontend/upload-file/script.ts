@@ -1,179 +1,243 @@
-import { EMPTY, fromEvent } from "rxjs";
+import { EMPTY, fromEvent, Subject } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import { catchError, exhaustMap, share, switchMap, tap } from "rxjs/operators";
+import {
+  catchError,
+  distinctUntilChanged,
+  exhaustMap,
+  filter,
+  map,
+  share,
+  shareReplay,
+  startWith,
+  switchMap,
+  tap,
+} from "rxjs/operators";
 import { fromUploadInput } from "../shared/from-upload-input";
 import { fromXMLHttpRequestUpload } from "../shared/from-xml-http-request-upload";
-
-const inputSingleFileUploadEl = document.querySelector<HTMLInputElement>(
-  "[data-single-file-upload]"
-)!;
-
-const singleFileUpload$ = fromUploadInput(inputSingleFileUploadEl, {
-  multiple: false,
-});
-
-const buttonUploadSingleFile = document.querySelector<HTMLButtonElement>(
-  "[data-button-upload-single-file]"
-)!;
-
-const selectedSingleFileContainerEl = document.querySelector<HTMLElement>(
-  `[data-selected-single-file]`
-)!;
-
-const clickUploadSingleFile$ = fromEvent<PointerEvent>(
-  buttonUploadSingleFile,
-  "click"
-);
-
-singleFileUpload$
-  .pipe(
-    switchMap((file) => {
-      if (file) {
-        selectedSingleFileContainerEl.innerText = `${file.name}`;
-        buttonUploadSingleFile.style.display = "block";
-        return clickUploadSingleFile$.pipe(
-          exhaustMap(() => {
-            return fromFetch("/upload-single-file", {
-              method: "POST",
-              body: file,
-              // duplex: "half",
-              selector: (res) => res.json(),
-            }).pipe(
-              catchError((err) => {
-                return EMPTY;
-              }),
-              tap(() => {
-                inputSingleFileUploadEl.value = "";
-                buttonUploadSingleFile.style.display = "none";
-                selectedSingleFileContainerEl.innerHTML = ``;
-              })
-            );
-          })
-        );
-      }
-      return EMPTY;
-    })
-  )
-  .subscribe();
-
-const inputMultipleFilesUploadEl = document.querySelector<HTMLInputElement>(
-  "[data-multiple-files-upload]"
-)!;
-
-const multipleFilesUpload$ = fromUploadInput(inputMultipleFilesUploadEl, {
-  multiple: true,
-}).pipe(share());
-
-const selectedMultipleFilesContainerEl = document.querySelector<HTMLDivElement>(
-  "[data-selected-multiple-files]"
-)!;
-
-const buttonUploadMultipleFilesEl = document.querySelector<HTMLButtonElement>(
-  "[data-button-upload-multiple-files]"
-)!;
-
-multipleFilesUpload$
-  .pipe(
-    switchMap((fileList) => {
-      const filesArray = Array.from(fileList);
-      const listSelectedFilesHTML = filesArray.reduce((path, file) => {
-        path += `<div>${file.name}</div>`;
-        return path;
-      }, "");
-
-      selectedMultipleFilesContainerEl.innerHTML = `${listSelectedFilesHTML}`;
-      if (fileList.length > 0) {
-        buttonUploadMultipleFilesEl.style.display = "block";
-        return fromEvent(buttonUploadMultipleFilesEl, "click").pipe(
-          exhaustMap(() => {
-            const formData = new FormData();
-            filesArray.forEach((file) => {
-              formData.append("files", file);
-            });
-
-            return fromFetch("/upload-multiple-files", {
-              method: "POST",
-              body: formData,
-              // headers: {
-              //   "Content-Type": "multipart/form-data",
-              // },
-            }).pipe(
-              catchError((err) => {
-                return EMPTY;
-              }),
-              tap(() => {
-                inputMultipleFilesUploadEl.value = "";
-                selectedMultipleFilesContainerEl.innerHTML = "";
-                buttonUploadMultipleFilesEl.style.display = "none";
-              })
-            );
-          })
-        );
-      }
-      return EMPTY;
-    })
-  )
-  .subscribe();
-
-const singleFileProgressUploadEl = document.querySelector<HTMLInputElement>(
-  "[data-single-file-progress] [data-upload]"
-)!;
-
-const singleFileProgressUpload$ = fromUploadInput(singleFileProgressUploadEl, {
-  multiple: false,
-}).pipe(share());
-
-const buttonUploadSingleFileProgressEl =
-  document.querySelector<HTMLButtonElement>(
-    "[data-single-file-progress] [data-button-upload]"
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    "[data-single-file-attached-body]"
   )!;
 
-const dataFileNameContainerSingleFileProgressUploadEl =
-  document.querySelector<HTMLDivElement>(
-    "[data-single-file-progress] [data-file-name-container]"
+  const inputFileEl =
+    containerEl.querySelector<HTMLInputElement>("[data-input-file]")!;
+
+  const onSelectedUploadFile$ = fromUploadInput(inputFileEl, {
+    multiple: false,
+  });
+
+  const uploadButtonEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-upload-button]"
   )!;
 
-const clickUploadSingleFileProgress$ = fromEvent<PointerEvent>(
-  buttonUploadSingleFileProgressEl,
-  "click"
-);
+  const selectedContainerEl =
+    containerEl.querySelector<HTMLElement>(`[data-selected]`)!;
 
-const fileNameSingleFileProgressUploadEl =
-  document.querySelector<HTMLInputElement>(
-    "[data-single-file-progress] [data-file-name]"
+  const onClickUpload$ = fromEvent<PointerEvent>(uploadButtonEl, "click");
+
+  const onUploaded$ = new Subject<void>();
+  onUploaded$.subscribe(() => {
+    inputFileEl.value = "";
+    uploadButtonEl.style.display = "none";
+    selectedContainerEl.innerHTML = ``;
+  });
+
+  onSelectedUploadFile$
+    .pipe(
+      switchMap((file) => {
+        if (file) {
+          selectedContainerEl.innerText = `${file.name}`;
+          uploadButtonEl.style.display = "block";
+          return onClickUpload$.pipe(
+            exhaustMap(() => {
+              return fromFetch("/upload-single-file", {
+                method: "POST",
+                body: file,
+                // duplex: "half",
+                selector: (res) => res.json(),
+              }).pipe(
+                tap(() => {
+                  onUploaded$.next();
+                }),
+                catchError((err) => {
+                  return EMPTY;
+                })
+              );
+            })
+          );
+        }
+        return EMPTY;
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    "[data-multiple-files-upload]"
   )!;
 
-singleFileProgressUpload$.subscribe((file) => {
-  if (file) {
-    dataFileNameContainerSingleFileProgressUploadEl.style.display = "block";
-    buttonUploadSingleFileProgressEl.style.display = "unset";
-  } else {
-    dataFileNameContainerSingleFileProgressUploadEl.style.display = "none";
-    buttonUploadSingleFileProgressEl.style.display = "none";
-  }
-});
+  const inputFileEl =
+    containerEl.querySelector<HTMLInputElement>("[data-input-file]")!;
 
-singleFileProgressUpload$
-  .pipe(
-    switchMap((file) => {
-      if (file) {
-        return clickUploadSingleFileProgress$.pipe(
-          exhaustMap(() => {
-            const fileName = fileNameSingleFileProgressUploadEl.value;
-            const formData = new FormData();
-            formData.set("file", file);
-            formData.set("fileName", fileName);
-            return fromXMLHttpRequestUpload(
-              "/upload-single-file-progress",
-              formData
-            );
-          })
-        );
+  const onSelectedUploadFiles$ = fromUploadInput(inputFileEl, {
+    multiple: true,
+  }).pipe(share());
+
+  const selectedContainerEl =
+    containerEl.querySelector<HTMLDivElement>("[data-selected]")!;
+
+  const uploadButtonEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-button-upload]"
+  )!;
+
+  const onUploaded$ = new Subject<void>();
+
+  onUploaded$.subscribe(() => {
+    inputFileEl.value = "";
+    selectedContainerEl.innerHTML = "";
+    uploadButtonEl.style.display = "none";
+  });
+
+  onSelectedUploadFiles$
+    .pipe(
+      switchMap((fileList) => {
+        const filesArray = Array.from(fileList);
+        const listSelectedFilesHTML = filesArray.reduce((path, file) => {
+          path += `<div>${file.name}</div>`;
+          return path;
+        }, "");
+
+        selectedContainerEl.innerHTML = `${listSelectedFilesHTML}`;
+        if (fileList.length > 0) {
+          uploadButtonEl.style.display = "block";
+          return fromEvent(uploadButtonEl, "click").pipe(
+            exhaustMap(() => {
+              const formData = new FormData();
+              filesArray.forEach((file) => {
+                formData.append("files", file);
+              });
+
+              return fromFetch("/upload-multiple-files", {
+                method: "POST",
+                body: formData,
+                // headers: {
+                //   "Content-Type": "multipart/form-data",
+                // },
+              }).pipe(
+                tap(() => {
+                  onUploaded$.next();
+                }),
+                catchError((err) => {
+                  return EMPTY;
+                })
+              );
+            })
+          );
+        }
+        return EMPTY;
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    "[data-single-file-progress]"
+  )!;
+  const inputFileEl =
+    containerEl.querySelector<HTMLInputElement>("[data-upload]")!;
+
+  const onSelectedUploadFile$ = fromUploadInput(inputFileEl, {
+    multiple: false,
+  }).pipe(share());
+
+  const buttonUploadEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-button-upload]"
+  )!;
+
+  const fileNameContainerEl = containerEl.querySelector<HTMLDivElement>(
+    "[data-file-name-container]"
+  )!;
+
+  const inputFileNameEl =
+    containerEl.querySelector<HTMLInputElement>("[data-file-name]")!;
+
+  const fileName$ = fromEvent(inputFileNameEl, "input").pipe(
+    map(() => inputFileNameEl.value),
+    startWith(inputFileNameEl.value),
+    shareReplay(1)
+  );
+
+  const validation$ = fileName$.pipe(
+    map((name) => {
+      if (name) {
+        return true;
+      } else {
+        return false;
       }
-      return EMPTY;
-    })
-  )
-  .subscribe();
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  validation$.subscribe((valid) => {
+    if (valid) {
+      buttonUploadEl.removeAttribute("disabled");
+    } else {
+      buttonUploadEl.setAttribute("disabled", "");
+    }
+  });
+
+  const onClickUpload$ = fromEvent<PointerEvent>(buttonUploadEl, "click");
+
+  onSelectedUploadFile$.subscribe((file) => {
+    if (file) {
+      fileNameContainerEl.style.display = "block";
+      buttonUploadEl.style.display = "unset";
+    } else {
+      fileNameContainerEl.style.display = "none";
+      buttonUploadEl.style.display = "none";
+    }
+  });
+
+  const onUploaded$ = new Subject<void>();
+  onUploaded$.subscribe(() => {
+    inputFileEl.value = "";
+    fileNameContainerEl.style.display = "none";
+    inputFileNameEl.value = "";
+    buttonUploadEl.style.display = "none";
+  });
+
+  onSelectedUploadFile$
+    .pipe(
+      switchMap((file) => {
+        if (file) {
+          return onClickUpload$.pipe(
+            exhaustMap(() => {
+              const fileName = inputFileNameEl.value;
+              const formData = new FormData();
+              formData.set("file", file);
+              formData.set("fileName", fileName);
+              return fromXMLHttpRequestUpload(
+                "/upload-single-file-progress",
+                formData
+              ).pipe(
+                tap(() => {
+                  onUploaded$.next();
+                }),
+                catchError((err) => {
+                  return EMPTY;
+                })
+              );
+            })
+          );
+        }
+        return EMPTY;
+      })
+    )
+    .subscribe();
+}
 
 // application/x-www-form-urlencoded
 // application/json

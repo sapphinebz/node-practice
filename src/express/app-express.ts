@@ -142,6 +142,32 @@ export class AppExpress {
   //routing
   //https://expressjs.com/en/guide/routing.html
 
+  download<T extends ClientRequestHttp>(
+    path: string
+  ): MonoTypeOperatorFunction<T> {
+    return (source: Observable<T>) =>
+      new Observable<T>((subscriber) => {
+        return source.subscribe({
+          next: (client) => {
+            client.response.download(path, (err) => {
+              if (err) {
+                subscriber.error(err);
+              } else {
+                subscriber.next(client);
+                subscriber.complete();
+              }
+            });
+          },
+          error: (err) => {
+            subscriber.error(err);
+          },
+          complete: () => {
+            subscriber.complete();
+          },
+        });
+      });
+  }
+
   notFound() {
     return this.createRouteObservable((next) => {
       const route = this.app.all("*", (request, response) => {

@@ -11,7 +11,6 @@ export class HttpsClient {
   request<T = any>(options: RequestOptions | string | URL) {
     return new Observable<T>((subscriber) => {
       const subscription = new Subscription();
-      console.log("request");
 
       const request = https.request(options, (response) => {
         subscription.add(

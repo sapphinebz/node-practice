@@ -20,6 +20,15 @@ const downloadPdf$ = httpDownload(
   _pdfPath
 ).pipe(shareReplay(1));
 
+apiExpress.options("/package", { origin: FRONT_END_ORIGIN }).subscribe();
+apiExpress
+  .get("/package")
+  .pipe(
+    apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN),
+    apiExpress.download(path.join(process.cwd(), "package.json"))
+  )
+  .subscribe();
+
 apiExpress.options("/pdf", { origin: FRONT_END_ORIGIN }).subscribe();
 
 apiExpress

@@ -238,6 +238,16 @@ export class HttpCreateServer extends Observable<void> {
                   createFolderIfNotExist(filePath);
                   const writeStream = fs.createWriteStream(filePath);
                   file.pipe(writeStream);
+                  writeStream.on("error", (err) => {
+                    // remove file
+                    fs.unlink(filePath, (unlinkErr) => {
+                      if (unlinkErr) {
+                        subscriber.error(unlinkErr);
+                      } else {
+                        subscriber.error(err);
+                      }
+                    });
+                  });
                   // file
                   //   .on("data", (data: any) => {
                   //     writeStream.write(data);

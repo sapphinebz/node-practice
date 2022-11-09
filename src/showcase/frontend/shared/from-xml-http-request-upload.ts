@@ -1,5 +1,12 @@
 import { Observable } from "rxjs";
 
+/**
+ * ไม่ต้องส่ง header multipart/form-data ไป
+ * เดี๋ยว browser ทำเอง เพราะมันต้องส่ง content-length กับ boundary ไปด้วย
+ * @param url api url
+ * @param formData
+ * @returns percentage Observable<number>
+ */
 export function fromXMLHttpRequestUpload(url: string, formData: FormData) {
   return new Observable<number>((subscriber) => {
     let request = new XMLHttpRequest();
