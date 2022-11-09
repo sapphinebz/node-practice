@@ -1,6 +1,8 @@
 import { EMPTY, fromEvent, Observable } from "rxjs";
 import { catchError, exhaustMap, takeLast, tap } from "rxjs/operators";
 import { fromFetch } from "rxjs/fetch";
+import { fromXMLHttpRequestDownload } from "../shared/from-xml-http-request-download";
+import { clickAnchorDownload } from "../shared/click-anchor-download";
 
 const downloadStreamEl = document.querySelector<HTMLButtonElement>(
   "[data-downloadStreamEl]"
@@ -11,7 +13,7 @@ fromEvent(downloadStreamEl, "click")
   .pipe(
     exhaustMap(() => {
       percentEl.innerText = `pending...`;
-      return XMLHttpRequestProgressDownload(`http://localhost:3000/pdf`).pipe(
+      return fromXMLHttpRequestDownload(`http://localhost:3000/pdf`).pipe(
         catchError((err) => {
           alert(err);
           return EMPTY;
@@ -21,10 +23,7 @@ fromEvent(downloadStreamEl, "click")
         }),
         takeLast(1),
         tap((res) => {
-          const blob = new Blob([res.data], {
-            type: "application/pdf",
-          });
-          clickAnchorWithBlob(blob, "rxjs.pdf");
+          clickAnchorDownload(res.data!, "rxjs.pdf");
         })
       );
     })
@@ -108,58 +107,6 @@ fromEvent<PointerEvent>(fetchEl, "click")
     )
     .subscribe();
 }
-
-function XMLHttpRequestProgressDownload(url: string) {
-  return new Observable<{ data: any; percent: number }>((subscriber) => {
-    let xhr = new XMLHttpRequest();
-    let progress = { data: null, percent: 0 };
-
-    xhr.open("GET", url);
-    xhr.responseType = "blob";
-    xhr.setRequestHeader(
-      "Access-Control-Allow-Origin",
-      "http://localhost:4200/"
-    );
-
-    xhr.onprogress = (event) => {
-      progress = {
-        ...progress,
-        percent: (event.loaded / event.total) * 100,
-      };
-      subscriber.next(progress);
-    };
-
-    xhr.onload = () => {
-      if (xhr.status != 200) {
-        subscriber.error({
-          status: xhr.status,
-          statusText: xhr.statusText,
-        });
-      } else {
-        subscriber.next({ ...progress, data: xhr.response });
-        subscriber.complete();
-      }
-    };
-
-    xhr.send();
-
-    return {
-      unsubscribe: () => {
-        xhr.abort();
-      },
-    };
-  });
-}
-
-function clickAnchorWithBlob(blob: Blob, fileName: string) {
-  const blobUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  document.body.append(anchor);
-  anchor.href = blobUrl;
-  anchor.download = fileName;
-  anchor.click();
-
-  anchor.remove();
-
-  URL.revokeObjectURL(blobUrl);
+function clickAnchorWithBlob(blob: Blob, arg1: string) {
+  throw new Error("Function not implemented.");
 }

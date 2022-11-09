@@ -8,6 +8,10 @@ import { readFileStreamToResponse } from "../../../read-file/read-stream-file-to
 
 const apiExpress = new AppExpress({ port: 3000 });
 const httpExpress = new AppExpress({ port: 4200 });
+httpExpress
+  .get("/")
+  .pipe(httpExpress.redirectTo("/progress-download.html"))
+  .subscribe();
 httpExpress.static("public");
 
 const FRONT_END_ORIGIN = "http://localhost:4200";
