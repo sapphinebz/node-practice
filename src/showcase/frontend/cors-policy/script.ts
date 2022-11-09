@@ -29,7 +29,7 @@ import { fromUploadInput } from "../shared/from-upload-input";
           method: "GET",
 
           headers: {
-            "Access-Control-Allow-Origin": "http://localhost:4200",
+            "Access-Control-Allow-Origin": location.origin,
           },
           // credentials: "include",
           selector: (res) => res.json(),
@@ -67,7 +67,7 @@ import { fromUploadInput } from "../shared/from-upload-input";
           body: JSON.stringify({ queryId: 1042, name: "Thanadit" }),
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "http://localhost:4200",
+            "Access-Control-Allow-Origin": location.origin,
           },
           // credentials: "include",
           selector: (res) => res.json(),
@@ -162,7 +162,7 @@ import { fromUploadInput } from "../shared/from-upload-input";
           method: "POST",
           body: formData,
           headers: {
-            "Access-Control-Allow-Origin": "http://localhost:4200",
+            "Access-Control-Allow-Origin": location.origin,
           },
           // credentials: "include",
           selector: (res) => res.json(),
