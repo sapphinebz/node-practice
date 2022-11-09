@@ -38,7 +38,7 @@ fromEvent(downloadEl, "click")
       return fromFetch(`http://localhost:3000/pdf`, {
         method: "GET",
         headers: {
-          "Access-Control-Allow-Origin": "http://localhost:4200/",
+          "Access-Control-Allow-Origin": location.origin,
         },
         selector: (res) => res.blob(),
       }).pipe(
@@ -61,7 +61,7 @@ fromEvent<PointerEvent>(fetchEl, "click")
       return fromFetch(`http://localhost:3000/data`, {
         method: "GET",
         headers: {
-          "Access-Control-Allow-Origin": "http://localhost:4200/",
+          "Access-Control-Allow-Origin": location.origin,
         },
         selector: (res) => res.json(),
       }).pipe(
@@ -95,7 +95,7 @@ fromEvent<PointerEvent>(fetchEl, "click")
       exhaustMap(() =>
         fromFetch(`http://localhost:3000/package`, {
           headers: {
-            "Access-Control-Allow-Origin": "http://localhost:4200/",
+            "Access-Control-Allow-Origin": location.origin,
           },
           selector: (resp) => resp.blob(),
         }).pipe(
