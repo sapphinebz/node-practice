@@ -67,7 +67,7 @@ apiServer
   .subscribe(({ request, response, formData }) => {
     response.writeHead(200, {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "http://localhost:4200",
+      "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
     });
     response.end(
       JSON.stringify({
