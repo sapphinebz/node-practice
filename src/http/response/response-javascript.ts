@@ -1,6 +1,6 @@
 import { OperatorFunction } from "rxjs";
 import { mergeMap, tap } from "rxjs/operators";
-import { readStreamFile } from "../../read-file/read-stream-file";
+import { readStreamFile } from "../../file/read-file/read-stream-file";
 import { ClientMessage } from "../server/http-create-server";
 
 export function responseJavascriptFile(

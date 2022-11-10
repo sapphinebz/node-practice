@@ -4,7 +4,7 @@ import { mergeMap, shareReplay } from "rxjs/operators";
 import path from "path";
 import { httpDownload } from "../../../http/http-download";
 import { AppExpress } from "../../../express/app-express";
-import { readFileStreamToResponse } from "../../../read-file/read-stream-file-to-response";
+import { readFileStreamToResponse } from "../../../file/read-file/read-stream-file-to-response";
 
 const apiExpress = new AppExpress({ port: 3000 });
 const httpExpress = new AppExpress({ port: 4200 });
