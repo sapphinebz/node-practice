@@ -1,27 +1,20 @@
-import { MonoTypeOperatorFunction, Observable } from "rxjs";
+import { MonoTypeOperatorFunction, Observable, take } from "rxjs";
 import {} from "rxjs/fetch";
+import { filter, takeUntil, tap } from "rxjs/operators";
+import { fromCmdInput } from "./from-cmd-input";
 
-export function takeUntilInput(
+export function takeUntilInput<T>(
   inputLine: string
-): MonoTypeOperatorFunction<string> {
-  return (source: Observable<string>) =>
-    new Observable<string>((subscriber) => {
-      return source.subscribe({
-        next: (line) => {
-          if (line.trim() === inputLine) {
-            subscriber.complete();
-            process.exit();
-          } else {
-            subscriber.next(line);
-          }
-        },
-        error: (err) => {
-          subscriber.error(err);
-        },
-        complete: () => {
-          subscriber.complete();
-          process.exit();
-        },
-      });
+): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>) =>
+    new Observable<T>((subscriber) => {
+      const onMatchedInput$ = fromCmdInput().pipe(
+        filter((line) => line.trim() === inputLine),
+        tap(() => {
+          setImmediate(() => process.exit());
+        }),
+        take(1)
+      );
+      return source.pipe(takeUntil(onMatchedInput$)).subscribe(subscriber);
     });
 }
