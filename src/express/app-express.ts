@@ -1,4 +1,4 @@
-import express, { RequestHandler } from "express";
+import express, { ErrorRequestHandler, RequestHandler } from "express";
 import { Query } from "express-serve-static-core";
 import { ParsedUrlQuery } from "querystring";
 import {
@@ -35,10 +35,14 @@ export interface TypedRequest<T extends Query, U> extends Express.Request {
 export class AppExpress {
   app = express();
 
+  emptyMiddleware: RequestHandler = (request, response, next) => {
+    next();
+  };
+
   constructor(options: { port: number }) {
-    this.app
-      // Parse URL-encoded bodies (as sent by HTML forms)
-      .use(express.urlencoded({ extended: true }));
+    // this.app;
+    // Parse URL-encoded bodies (as sent by HTML forms)
+    // .use(express.urlencoded({ extended: true }));
     // Parse JSON bodies (as sent by API clients)
     // .use(express.json())
     // .use(express.raw());
@@ -50,8 +54,15 @@ export class AppExpress {
     this.app.use(this.setHeaders({ "Cache-Control": "no-cache" }));
   }
 
-  static(path: string) {
-    this.app.use(express.static(path));
+  static(prefixPath: string, staticPath: string): void;
+  static(staticPath: string): void;
+  static(prefixPath: string, staticPath?: string): void {
+    if (prefixPath && staticPath) {
+      this.app.use(prefixPath, express.static(staticPath));
+    } else if (prefixPath) {
+      let _staticPath = prefixPath;
+      this.app.use(express.static(_staticPath));
+    }
   }
 
   redirectTo<T extends ClientRequestHttp>(
@@ -86,27 +97,60 @@ export class AppExpress {
     });
   }
 
-  get(path: string) {
+  get(path: string): Observable<ClientRequestHttp>;
+  get(path: string, middleware: RequestHandler): Observable<ClientRequestHttp>;
+  get(
+    path: string,
+    middleware?: RequestHandler
+  ): Observable<ClientRequestHttp> {
     return this.createRouteObservable((next) => {
-      this.app.get(path, (request, response) => {
-        next({ request, response });
-      });
+      this.app.get(
+        path,
+        middleware ?? this.emptyMiddleware,
+        (request, response) => {
+          next({ request, response });
+        }
+      );
     });
   }
 
-  post<TBody = any>(path: string) {
+  post<TBody = any>(path: string): Observable<BodyClientRequestHttp<TBody>>;
+  post<TBody = any>(
+    path: string,
+    middleware: RequestHandler
+  ): Observable<BodyClientRequestHttp<TBody>>;
+  post<TBody = any>(
+    path: string,
+    middleware?: RequestHandler
+  ): Observable<BodyClientRequestHttp<TBody>> {
     return this.createRouteObservable<BodyClientRequestHttp<TBody>>((next) => {
-      this.app.post(path, (request, response) => {
-        next({ request, response, body: request.body });
-      });
+      this.app.post(
+        path,
+        middleware ?? this.emptyMiddleware,
+        (request, response) => {
+          next({ request, response, body: request.body });
+        }
+      );
     });
   }
 
-  delete(path: string) {
+  delete(path: string): Observable<ParamClientRequestHttp>;
+  delete(
+    path: string,
+    middleware: RequestHandler
+  ): Observable<ParamClientRequestHttp>;
+  delete(
+    path: string,
+    middleware?: RequestHandler
+  ): Observable<ParamClientRequestHttp> {
     return this.createRouteObservable<ParamClientRequestHttp>((next) => {
-      this.app.delete(path, (request, response) => {
-        next({ request, response, param: request.params });
-      });
+      this.app.delete(
+        path,
+        middleware ?? this.emptyMiddleware,
+        (request, response) => {
+          next({ request, response, param: request.params });
+        }
+      );
     });
   }
 
@@ -123,21 +167,39 @@ export class AppExpress {
     });
   }
 
-  // middleware pattern
-  // (req, res, next) => {
-  //   console.log('the response will be sent by the next function ...')
-  //   next()
-  // }
+  useError(errorRequestHandler: ErrorRequestHandler) {
+    return this.app.use(errorRequestHandler);
+    // return new Observable<{
+    //   error: any;
+    //   request: express.Request;
+    //   response: express.Response;
+    //   next: NextFunction;
+    // }>((subscriber) => {
+    //   const errorHandler: ErrorRequestHandler = (
+    //     err,
+    //     request,
+    //     response,
+    //     next
+    //   ) => {
+    //     subscriber.next({ error: err, request, response, next });
+    //   };
+    //   this.app.use(errorHandler);
+    // });
+  }
 
-  // notFound() {
-  //   const clientHttp$ = new Subject<ClientRequestHttp>();
-  //   this.app.use((req, res) => {
-  //     clientHttp$.next({ request: req, response: res });
-  //   });
-  //   return new Observable<ClientRequestHttp>((subscriber) => {
-  //     return clientHttp$.subscribe(subscriber);
-  //   });
-  // }
+  use(requestHandler: RequestHandler) {
+    return this.app.use(requestHandler);
+    //   return new Observable<{
+    //     request: express.Request;
+    //     response: express.Response;
+    //     next: NextFunction;
+    //   }>((subscriber) => {
+    //     const requestHandler: RequestHandler = (request, response, next) => {
+    //       subscriber.next({ request, response, next });
+    //     };
+    //     this.app.use(requestHandler);
+    //   });
+  }
 
   //routing
   //https://expressjs.com/en/guide/routing.html
@@ -170,9 +232,10 @@ export class AppExpress {
 
   notFound() {
     return this.createRouteObservable((next) => {
-      const route = this.app.all("*", (request, response) => {
+      const requestHandler: RequestHandler = (request, response) => {
         next({ request, response });
-      });
+      };
+      const route = this.app.all("*", requestHandler);
     });
   }
 
