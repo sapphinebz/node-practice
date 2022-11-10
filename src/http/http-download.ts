@@ -2,7 +2,7 @@ import { Observable, switchMap, takeLast } from "rxjs";
 import { httpGetStream } from "./http-stream-get";
 import fs from "fs";
 import fsPromise from "fs/promises";
-import { createFolderIfNotExist } from "../folder/create-folder-if-not-exist";
+import { createFolderIfNotExist } from "../file/folder/create-folder-if-not-exist";
 import https from "https";
 import http from "http";
 

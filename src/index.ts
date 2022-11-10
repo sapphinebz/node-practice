@@ -8,9 +8,16 @@
 // import "./showcase/upload-file/upload-file.js";
 // import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
 
+import { fromArgs } from "./stdin/from-args";
+import { fromCmdInput } from "./stdin/from-cmd-input";
+import { fromStdInputQuestionList } from "./stdin/from-std-input-question-list";
+
+// import { Subject, throttleTime } from "rxjs";
+// import { Duplex, PassThrough } from "stream";
+
 // import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
-import "./showcase/backend/progress-download/progress-download.js";
+// import "./showcase/backend/progress-download/progress-download.js";
 
 // const issue2options = {
 //   origin: true,
@@ -139,3 +146,69 @@ import "./showcase/backend/progress-download/progress-download.js";
 //     // Pass to next layer of middleware
 //     next();
 //     });
+// import fs from "fs";
+// class Throttle extends Duplex {
+//   onWrite$ = new Subject<{ chunk: any; callback: any }>();
+//   constructor() {
+//     super();
+
+//     this.onWrite$.pipe(throttleTime(1000)).subscribe(({ chunk, callback }) => {
+//       console.log("subscribe");
+//       this.push(chunk);
+//     });
+//   }
+
+//   _read(size: number): void {}
+
+//   _write(
+//     chunk: any,
+//     encoding: BufferEncoding,
+//     callback: (error?: Error | null | undefined) => void
+//   ): void {
+//     console.log("write");
+//     this.onWrite$.next({ chunk, callback });
+
+//     callback();
+//   }
+
+//   _final(callback: (error?: Error | null | undefined) => void): void {}
+// }
+// const writable = fs.createWriteStream(__dirname + "/text.txt");
+// const throttle = new Throttle();
+// process.stdin.pipe(throttle).pipe(writable);
+
+// const report = new PassThrough({ encoding: "utf8" });
+// report.on("data", (data) => {
+//   console.log("--data", data);
+// });
+// process.stdin.pipe(report);
+
+import path from "path";
+import { FromDirectory } from "./file/folder/from-directory";
+import { bindNodeCallback, concatMap, from, switchMap } from "rxjs";
+import fs from "fs";
+import { map } from "rxjs/operators";
+
+const directoryPath = path.join(process.cwd(), "movies");
+const realPath = "/Users/thanaditbuthong/Desktop/movies";
+
+const directory = new FromDirectory(realPath);
+// const directory = new FromDirectory(directoryPath);
+
+directory.createFolder("src").subscribe();
+directory
+  .readdir()
+  .pipe(
+    directory.filterExt(".mov"),
+    directory.sort((fileA, fileB) => {
+      return fileA.birthtime.getTime() - fileB.birthtime.getTime();
+    }),
+    directory.renamePattern((filename, index, ext) => {
+      if (ext) {
+        const name = `chapter${index + 1}${ext}`;
+        return name;
+      }
+      return filename;
+    })
+  )
+  .subscribe(console.log);

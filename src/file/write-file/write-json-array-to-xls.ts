@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import { defer } from "rxjs";
-import { createFolderIfNotExist } from "../../folder/create-folder-if-not-exist";
+import { createFolderIfNotExist } from "../folder/create-folder-if-not-exist";
 
 export function writeJsonArrayToXls(
   path: string,

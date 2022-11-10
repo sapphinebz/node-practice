@@ -15,7 +15,7 @@ import fs from "fs";
 import url from "url";
 import { ParsedUrlQuery } from "querystring";
 import { fromListener } from "../../operators/from-listener";
-import { createFolderIfNotExist } from "../../folder/create-folder-if-not-exist";
+import { createFolderIfNotExist } from "../../file/folder/create-folder-if-not-exist";
 import { Readable } from "stream";
 export interface BusBoyInfo {
   filename: string;
