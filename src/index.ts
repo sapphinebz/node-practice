@@ -183,32 +183,8 @@ import { fromStdInputQuestionList } from "./stdin/from-std-input-question-list";
 // });
 // process.stdin.pipe(report);
 
-import path from "path";
-import { FromDirectory } from "./file/folder/from-directory";
-import { bindNodeCallback, concatMap, from, switchMap } from "rxjs";
-import fs from "fs";
-import { map } from "rxjs/operators";
+import { renameVideoFiles } from "./file/folder/rename-video-files";
 
-const directoryPath = path.join(process.cwd(), "movies");
-const realPath = "/Users/thanaditbuthong/Desktop/movies";
+const realPath = "/Users/thanaditbuthong/Desktop/videos";
 
-const directory = new FromDirectory(realPath);
-// const directory = new FromDirectory(directoryPath);
-
-directory.createFolder("src").subscribe();
-directory
-  .readdir()
-  .pipe(
-    directory.filterExt(".mov"),
-    directory.sort((fileA, fileB) => {
-      return fileA.birthtime.getTime() - fileB.birthtime.getTime();
-    }),
-    directory.renamePattern((filename, index, ext) => {
-      if (ext) {
-        const name = `chapter${index + 1}${ext}`;
-        return name;
-      }
-      return filename;
-    })
-  )
-  .subscribe(console.log);
+renameVideoFiles(realPath).subscribe();
