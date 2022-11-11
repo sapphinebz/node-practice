@@ -7,11 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf ./dist",
     "build:api": "npx tsc",
+    "watch": "npx tsc --watch",
     "build:web": "npx webpack --config webpack.config.js",
     "build": "npm run build:web && npm run build:api",
-    "start": "PORT=3000 npm run clean && npm run build && npm run node-run",
-    "start:api": "npm run build:api && npm run node-run",
-    "node-run": "node ./dist/node/index.js"
+    "start": "PORT=3000 npm run clean && npm run build && npm run index",
+    "start:api": "npm run build:api && npm run index",
+    "index": "node ./dist/node/index.js"
   },
   "keywords": [],
   "author": "",
