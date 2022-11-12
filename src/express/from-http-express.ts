@@ -29,15 +29,20 @@ import { ClientRequestHttp } from "./app-express";
  */
 
 export function fromHttpExpress(
-  project: (requestHandler: RequestHandler) => void
+  project: (requestHandler: RequestHandler) => void,
+  fallback?: RequestHandler
 ) {
   return new Observable<ClientRequestHttp>((subscriber) => {
-    project((request, response) => {
+    project((request, response, next) => {
       if (!subscriber.closed) {
         subscriber.next({ request, response });
       } else {
-        response.writeHead(404, "Not Found");
-        response.end();
+        if (fallback) {
+          fallback(request, response, next);
+        } else {
+          response.writeHead(404, "Not Found");
+          response.end();
+        }
       }
     });
   });
