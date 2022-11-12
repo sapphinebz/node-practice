@@ -1,23 +1,30 @@
 import { interval } from "rxjs";
-import { mergeMap, takeUntil, tap, map, share } from "rxjs/operators";
-import { AppExpress } from "../../../express/app-express";
+import { map, mergeMap, share, takeUntil, tap } from "rxjs/operators";
 import { fromListener } from "../../../operators/from-listener";
 
-const appExpress = new AppExpress({ port: Number(process.env.PORT) || 3000 });
-appExpress
-  .get("/")
-  .pipe(appExpress.redirectTo("/stream-receivers.html"))
-  .subscribe();
+import express from "express";
+import { fromHttpExpress } from "../../../express/from-http-express";
 
-appExpress.static("public");
+const app = express();
+
+app.use(express.static("public"));
+
+app.listen(process.env.PORT || 3000, () => {});
+
+app.get("/", (request, response) => {
+  response.redirect("/stream-receivers.html");
+});
+
+const receive$ = fromHttpExpress((handler) => {
+  app.get("/receive", handler);
+});
 
 const sender$ = interval(2000).pipe(
   map((i) => `send: ${i}`),
   share()
 );
 
-appExpress
-  .get("/receive")
+receive$
   .pipe(
     mergeMap(({ request, response }) => {
       response.status(200);
