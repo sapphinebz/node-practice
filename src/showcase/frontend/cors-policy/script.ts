@@ -86,6 +86,49 @@ import { fromUploadInput } from "../shared/from-upload-input";
 
 {
   const containerEl = document.querySelector<HTMLElement>(
+    "[data-form-data-no-file]"
+  )!;
+
+  const fetchButtonEl =
+    containerEl.querySelector<HTMLButtonElement>("[data-fetch-btn]")!;
+
+  const statusEl = containerEl.querySelector<HTMLElement>("[data-status]")!;
+
+  /**
+   * ส่ง body เป็น formData เดี๋ยวมันใส่ headers Content-Type ให้อัตโนมัติเอง
+   */
+  fromEvent<PointerEvent>(fetchButtonEl, "click")
+    .pipe(
+      exhaustMap(() => {
+        console.log("click");
+        const formData = new FormData();
+        formData.set("filename", "filename_value");
+        formData.set("file", "file_value");
+        formData.set("example", "example_value");
+        formData.set("example1", "example_value1");
+        return fromFetch("http://localhost:3000/form-data-no-file", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Access-Control-Allow-Origin": location.origin,
+          },
+          selector: (res) => res.json(),
+        }).pipe(
+          catchError((err) => {
+            console.log("errr", err);
+            return of(err);
+          }),
+          tap((response) => {
+            statusEl.innerHTML = `${JSON.stringify(response)}`;
+          })
+        );
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>(
     "[data-http-post-form-data]"
   )!;
 
@@ -174,6 +217,37 @@ import { fromUploadInput } from "../shared/from-upload-input";
             onUploaded$.next();
             // statusEl.innerHTML = `${JSON.stringify(response)}`;
             statusEl.innerHTML = `uploaded successfully!`;
+          })
+        );
+      })
+    )
+    .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    "[data-access-control-expose-headers]"
+  )!;
+
+  const fetchButtonEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-fetch-button]"
+  )!;
+
+  fromEvent<PointerEvent>(fetchButtonEl, "click")
+    .pipe(
+      switchMap(() => {
+        return fromFetch("http://localhost:3000/expose-headers", {
+          method: "GET",
+          headers: {
+            "Access-Control-Allow-Origin": location.origin,
+          },
+          selector: (response) => {
+            console.log(response.headers);
+            return response.json();
+          },
+        }).pipe(
+          catchError((err) => {
+            return of(err);
           })
         );
       })

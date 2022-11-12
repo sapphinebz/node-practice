@@ -22,6 +22,12 @@ import { ClientRequestHttp } from "./app-express";
 //   response.send("Hi API ");
 // });
 
+/**
+ * transform express middleware to observable
+ * @param project express creating middleware
+ * @returns Observable
+ */
+
 export function fromHttpExpress(
   project: (requestHandler: RequestHandler) => void
 ) {

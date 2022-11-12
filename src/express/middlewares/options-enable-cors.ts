@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 
-export function enableCors(origin: string): RequestHandler {
+export function optionsEnableCors(origin: string): RequestHandler {
   return (request, response) => {
     response.writeHead(204, {
       "Access-Control-Allow-Origin": origin,

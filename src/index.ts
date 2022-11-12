@@ -17,9 +17,9 @@
 // import { Duplex, PassThrough } from "stream";
 
 // import "./showcase/backend/upload-file/upload-file.js";
-// import "./showcase/backend/cors-policy/cors-policy.js";
+import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/progress-download/progress-download.js";
-import "./showcase/backend/json-database/json-database.js";
+// import "./showcase/backend/json-database/json-database.js";
 
 // const issue2options = {
 //   origin: true,
