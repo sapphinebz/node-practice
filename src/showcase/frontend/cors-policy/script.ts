@@ -12,6 +12,7 @@ import {
 } from "rxjs/operators";
 import { fromFileToURL } from "../shared/from-file-to-url";
 import { fromUploadInput } from "../shared/from-upload-input";
+import { generateMillsec } from "../../../time/generate-millisec";
 
 {
   const containerEl = document.querySelector<HTMLElement>("[data-http-get]")!;
@@ -253,6 +254,50 @@ import { fromUploadInput } from "../shared/from-upload-input";
       })
     )
     .subscribe();
+}
+
+{
+  const containerEl = document.querySelector<HTMLElement>("[data-cookies]")!;
+
+  const fetchButtonEl = containerEl.querySelector<HTMLButtonElement>(
+    "[data-fetch-button]"
+  )!;
+
+  const setCookiesButtonEl =
+    containerEl.querySelector<HTMLButtonElement>("[data-set-cookies]")!;
+
+  fromEvent<PointerEvent>(fetchButtonEl, "click")
+    .pipe(
+      switchMap(() => {
+        return fromFetch("http://localhost:3000/fetch-cookies", {
+          method: "GET",
+          // credentials = cookies, Authorization header
+          credentials: "include",
+          mode: "cors",
+          headers: {
+            "Access-Control-Allow-Origin": location.origin,
+          },
+          selector: (response) => {
+            return response.json();
+          },
+        }).pipe(
+          catchError((err) => {
+            return of(err);
+          })
+        );
+      })
+    )
+    .subscribe();
+
+  fromEvent<PointerEvent>(setCookiesButtonEl, "click").subscribe(() => {
+    let key = "score";
+    let value = encodeURIComponent(
+      Math.floor(Math.random() * 123456 + 123456).toString()
+    );
+
+    const ages = generateMillsec({ days: 30 });
+    document.cookie = `${key}=${value};path=/;max-age=${ages};SameSite=Strict`;
+  });
 }
 
 function isImage(file: File) {

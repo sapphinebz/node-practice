@@ -1,12 +1,13 @@
 import path from "path";
-import { tap } from "rxjs/operators";
-import { HttpCreateServer } from "../../../http/server/http-create-server";
 
 import express from "express";
-import { formDataToBody } from "../../../express/middlewares/form-data-to-body";
-import { optionsEnableCors } from "../../../express/middlewares/options-enable-cors";
 import { allowOrigin } from "../../../express/middlewares/allow-origin";
 import { formDataFileUpload } from "../../../express/middlewares/form-data-file-upload";
+import { formDataToBody } from "../../../express/middlewares/form-data-to-body";
+import { optionsEnableCors } from "../../../express/middlewares/options-enable-cors";
+import { generateToken } from "../../../http/token/generate-token";
+import { generateMillsec } from "../../../time/generate-millisec";
+import { allowCredentials } from "../../../express/middlewares/allow-credentials";
 
 const FRONT_END_ORIGIN = "http://localhost:4200";
 
@@ -118,74 +119,57 @@ backend.get(
   }
 );
 
-// const frontendServer = new HttpCreateServer({ port: 4200 });
+// Cookies ใน browser เก็บที่เดียวกันหมด แต่ละ tab จะเห็นข้อมูลที่เก็บเหมือนกัน
 
-// frontendServer.static("public").subscribe();
+// same-site
+// ประกอบด้วย domain suffix และ ส่วนที่อยู่ก่อน domain
+// ทั้ง 2 อันนี้อยู่ same-site
+// www.web.dev
+// static.web.dev
 
-// const apiServer = new HttpCreateServer({ port: 3000 });
+// ถ้าไม่ใช่พวก .com หรือ public suffix
+// ไม่ถือว่าเป็น domain เดียวกัน
+//  your-project.github.io
+//  my-project.github.io
+// ถือว่าเป็น cross-site request.
 
-// apiServer.option("/api", { origin: FRONT_END_ORIGIN }).subscribe();
+// domain ของ cookies จะถูกกำหนด domain เป็นของ domain backend
 
-// apiServer
-//   .get("/api")
-//   .pipe(
-//     tap(({ response }) => {
-//       response.writeHead(200, {
-//         "Content-Type": "application/json",
-//         "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
-//       });
-//       response.end(
-//         JSON.stringify({
-//           results: [
-//             {
-//               employeeId: 1,
-//               employeeName: "Thanadit",
-//             },
-//             {
-//               employeeId: 2,
-//               employeeName: "Buthong",
-//             },
-//           ],
-//         })
-//       );
-//     })
-//   )
-//   .subscribe();
+// sameSite: "strict",
+// จะไม่ส่ง cookies จาก frontend ไป backend เลย ถ้า cross-site
+// ไม่ให้เข้าไปใน transactional pages จาก external linke ได้
 
-// apiServer
-//   .post("/api")
-//   .pipe(apiServer.withJsonBody())
-//   .subscribe(({ response, body }) => {
-//     response.writeHead(200, {
-//       "Content-Type": "application/json",
-//       "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
-//     });
-//     response.end(
-//       JSON.stringify({
-//         serverReceived: body,
-//       })
-//     );
-//   });
+// sameSite: "lax",
+// เข้าผ่าน external link ก็เล่น session เดิมต่อได้
+// cr
 
-// apiServer.option("/api-form-data", { origin: FRONT_END_ORIGIN }).subscribe();
+// sameSite: "none"
+// ไม่มีการป้องกันอะไรเลย
+// cross-site ก็ส่ง cookie (ที่ต่าง domain) กันให้ด้วย
 
-// apiServer
-//   .post("/api-form-data")
-//   .pipe(
-//     apiServer.withFormData({
-//       filePath: ({ fieldname, file, info, request }) => {
-//         return path.join(__dirname, "uploads", info.filename);
-//       },
-//     })
-//   )
-//   .subscribe(({ request, response, formData }) => {
-//     response.writeHead(200, {
-//       "Content-Type": "application/json",
-//       "Access-Control-Allow-Origin": FRONT_END_ORIGIN,
-//     });
-//     response.end(
-//       JSON.stringify({
-//         serverReceived: formData,
-//       })
-//     );
-//   });
+// ถ้า frontend site กับ backend site ไม่ตรงกัน จะไม่ auto set Cookie ที่ frontend ให้
+
+backend.options("/fetch-cookies", allowCredentials(), optionsEnableCors());
+backend.get(
+  "/fetch-cookies",
+  allowCredentials(),
+  allowOrigin(),
+  (request, response) => {
+    const token = generateToken();
+    const millisec = generateMillsec({
+      days: 30,
+    });
+    response.cookie("token", token, {
+      maxAge: millisec,
+      path: "/",
+      secure: true,
+      // sameSite: "strict",
+      sameSite: "lax",
+      // sameSite: "none",
+    });
+
+    // response.set("Access-Control-Expose-Headers", "*");
+
+    response.send({ message: "set-cookie header sent with maxAge" });
+  }
+);

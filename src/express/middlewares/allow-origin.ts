@@ -1,8 +1,11 @@
 import { RequestHandler } from "express";
 
-export function allowOrigin(origin: string): RequestHandler {
+export function allowOrigin(origin?: string): RequestHandler {
   return (request, response, next) => {
-    response.set("Access-Control-Allow-Origin", origin);
+    response.set(
+      "Access-Control-Allow-Origin",
+      origin || request.headers.origin
+    );
     next();
   };
 }
