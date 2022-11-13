@@ -1,44 +1,43 @@
-import cors from "cors";
+import express from "express";
+import path from "path";
 import { concat } from "rxjs";
 import { mergeMap, shareReplay } from "rxjs/operators";
-import path from "path";
-import { httpDownload } from "../../../http/http-download";
-import { AppExpress } from "../../../express/app-express";
+import { fromHttpExpress } from "../../../express/from-http-express";
+import { allowOrigin } from "../../../express/middlewares/allow-origin";
+import { optionsEnableCors } from "../../../express/middlewares/options-enable-cors";
 import { readFileStreamToResponse } from "../../../file/read-file/read-stream-file-to-response";
+import { httpDownload } from "../../../http/http-download";
 
-const apiExpress = new AppExpress({ port: 3000 });
-const httpExpress = new AppExpress({ port: 4200 });
-httpExpress
-  .get("/")
-  .pipe(httpExpress.redirectTo("/progress-download.html"))
-  .subscribe();
-httpExpress.static("public");
+const apiExpress = express();
+apiExpress.listen(3000, () => {});
+
+const clientExpress = express();
+clientExpress.use(express.static("public"));
+clientExpress.listen(4200, () => {});
 
 const FRONT_END_ORIGIN = "http://localhost:4200";
-// const corsOptions = cors({
-//   origin: "http://localhost:4200",
-// });
+
 const _pdfPath = `${__dirname}/pdf/rxjs.pdf`;
 const downloadPdf$ = httpDownload(
   `https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf`,
   _pdfPath
 ).pipe(shareReplay(1));
 
-apiExpress.options("/package", { origin: FRONT_END_ORIGIN }).subscribe();
-apiExpress
-  .get("/package")
-  .pipe(
-    apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN),
-    apiExpress.download(path.join(process.cwd(), "package.json"))
-  )
-  .subscribe();
+apiExpress.options("/package", optionsEnableCors(FRONT_END_ORIGIN));
+apiExpress.get(
+  "/package",
+  allowOrigin(FRONT_END_ORIGIN),
+  (request, response) => {
+    response.download(path.join(process.cwd(), "package.json"));
+  }
+);
 
-apiExpress.options("/pdf", { origin: FRONT_END_ORIGIN }).subscribe();
+apiExpress.options("/pdf", optionsEnableCors(FRONT_END_ORIGIN));
 
-apiExpress
-  .get("/pdf")
+fromHttpExpress((handler) => {
+  apiExpress.get("/pdf", allowOrigin(FRONT_END_ORIGIN), handler);
+})
   .pipe(
-    apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN),
     mergeMap((client) => {
       return concat(
         downloadPdf$,
@@ -52,22 +51,18 @@ apiExpress
   )
   .subscribe();
 
-apiExpress.options("/data", { origin: FRONT_END_ORIGIN }).subscribe();
-
-apiExpress
-  .get("/data")
-  .pipe(apiExpress.setHeaderAllowOrigin(FRONT_END_ORIGIN))
-  .subscribe((client) => {
-    client.response.status(200).json({
-      results: [
-        {
-          employeeId: 1,
-          employeeName: "Thanadit",
-        },
-        {
-          employeeId: 2,
-          employeeName: "Sowaluk",
-        },
-      ],
-    });
+apiExpress.options("/data", optionsEnableCors(FRONT_END_ORIGIN));
+apiExpress.get("/data", allowOrigin(FRONT_END_ORIGIN), (request, response) => {
+  response.status(200).json({
+    results: [
+      {
+        employeeId: 1,
+        employeeName: "Thanadit",
+      },
+      {
+        employeeId: 2,
+        employeeName: "Sowaluk",
+      },
+    ],
   });
+});

@@ -47,7 +47,7 @@ fromEvent(downloadEl, "click")
           return EMPTY;
         }),
         tap((blob) => {
-          clickAnchorWithBlob(blob, "rxjs.pdf");
+          clickAnchorDownload(blob, "rxjs.pdf");
         })
       );
     })
@@ -100,13 +100,10 @@ fromEvent<PointerEvent>(fetchEl, "click")
           selector: (resp) => resp.blob(),
         }).pipe(
           tap((blob) => {
-            clickAnchorWithBlob(blob, "package.json");
+            clickAnchorDownload(blob, "package.json");
           })
         )
       )
     )
     .subscribe();
-}
-function clickAnchorWithBlob(blob: Blob, arg1: string) {
-  throw new Error("Function not implemented.");
 }

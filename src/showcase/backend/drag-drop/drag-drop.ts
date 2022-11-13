@@ -1,18 +1,15 @@
-import path from "path";
+import express from "express";
 
 import { pipe, ReplaySubject } from "rxjs";
 import { map, share } from "rxjs/operators";
-import { AppExpress } from "../../../express/app-express";
 import {
   WebSocketObservable,
   WsMessage,
 } from "../../../web-socket/web-socket-observable";
 
-const apiExpress = new AppExpress({ port: 3000 });
-apiExpress.get("/").subscribe(({ response }) => {
-  response.sendFile(path.join(process.cwd(), "public", "drag-drop.html"));
-});
-apiExpress.static("public");
+const app = express();
+app.use(express.static("public"));
+app.listen(process.env.PORT || 3000, () => {});
 
 let state = {} as { [alt: string]: string };
 
