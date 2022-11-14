@@ -19,10 +19,11 @@ import { fromListener } from "../operators/from-listener";
 export type WsMessage = [ws.WebSocket, string];
 export class WebSocketObservable {
   private readonly clientMessageSubject = new Subject<WsMessage>();
-  private readonly onClose$ = new AsyncSubject<void>();
   private readonly serverBoardcastSubject = new Subject<WsMessage>();
-  readonly clientMessage$ = this.clientMessageSubject.asObservable();
-  readonly serverMessage$ = this.serverBoardcastSubject.pipe(
+
+  readonly onCloseWebSocket$ = new AsyncSubject<void>();
+  readonly onClientSentMessage$ = this.clientMessageSubject.asObservable();
+  readonly onServerSentMessage$ = this.serverBoardcastSubject.pipe(
     this.options.serverTransform ?? identity
   );
 
@@ -36,20 +37,22 @@ export class WebSocketObservable {
       port: this.options.port,
     });
 
-    this.onClose$.subscribe(() => {
+    this.onCloseWebSocket$.subscribe(() => {
       webSocketServer.close();
     });
 
-    const connection$ = fromListener<ws.WebSocket>(
+    const onClientConnected$ = fromListener<ws.WebSocket>(
       webSocketServer,
       "connection"
     ).pipe(share());
 
-    connection$
+    onClientConnected$
       .pipe(
         mergeMap((webSocketClient) => {
-          return this.serverMessage$.pipe(
-            this.ignoreClientItself(webSocketClient),
+          return this.onServerSentMessage$.pipe(
+            filter(([client, ms]) => {
+              return webSocketClient !== client;
+            }),
             tap(([client, msg]) => {
               webSocketClient.send(msg);
             }),
@@ -60,11 +63,11 @@ export class WebSocketObservable {
             takeUntil(this.onClientCloseBrowser(webSocketClient))
           );
         }),
-        takeUntil(this.onClose$)
+        takeUntil(this.onCloseWebSocket$)
       )
       .subscribe();
 
-    connection$
+    onClientConnected$
       .pipe(
         mergeMap((webSocketClient) => {
           return fromListener<ws.RawData>(webSocketClient, "message").pipe(
@@ -74,7 +77,7 @@ export class WebSocketObservable {
             takeUntil(this.onClientCloseBrowser(webSocketClient))
           );
         }),
-        takeUntil(this.onClose$)
+        takeUntil(this.onCloseWebSocket$)
       )
       .subscribe();
 
@@ -98,8 +101,8 @@ export class WebSocketObservable {
   }
 
   close() {
-    this.onClose$.next();
-    this.onClose$.complete();
+    this.onCloseWebSocket$.next();
+    this.onCloseWebSocket$.complete();
   }
 
   boardcast(message: WsMessage) {
@@ -110,12 +113,12 @@ export class WebSocketObservable {
     return fromListener(webSocketClient, "close");
   }
 
-  private ignoreClientItself(
-    webSocketClient: ws.WebSocket
-  ): MonoTypeOperatorFunction<WsMessage> {
-    return filter((message) => {
-      const [client, _] = message;
-      return client !== webSocketClient;
-    });
-  }
+  // private ignoreClientItself(
+  //   webSocketClient: ws.WebSocket
+  // ): MonoTypeOperatorFunction<WsMessage> {
+  //   return filter((message) => {
+  //     const [client, _] = message;
+  //     return client !== webSocketClient;
+  //   });
+  // }
 }

@@ -17,6 +17,6 @@ const webSocket = new WebSocketObservable({
   ),
 });
 
-webSocket.clientMessage$.subscribe((messagePackage) => {
+webSocket.onClientSentMessage$.subscribe((messagePackage) => {
   webSocket.boardcast(messagePackage);
 });
