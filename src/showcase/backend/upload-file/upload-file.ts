@@ -56,7 +56,6 @@ function manualUpload(
   response: express.Response
 ) {
   return new Observable<{ progress: number }>((subscriber) => {
-    console.log("manualUpload");
     const subscription = new Subscription();
     const contentLength = parseInt(request.header("Content-Length") || "1", 10);
     let progress = 0;

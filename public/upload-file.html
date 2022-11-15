@@ -9,27 +9,20 @@
   </head>
   <body>
     <h3>Single File Upload(Attached File on Body):</h3>
-    <div data-single-file-attached-body>
-      <input type="file" data-input-file />
-      <div data-selected></div>
-      <button style="display: none" data-upload-button>upload</button>
-    </div>
+    <uploader-element
+      data-single-file-attached-body
+      include-filename="false"
+    ></uploader-element>
+
     <h3>Multiple Files Upload:</h3>
-    <div data-multiple-files-upload>
-      <input data-input-file type="file" multiple />
-      <div data-selected></div>
-      <button style="display: none" data-button-upload>upload</button>
-    </div>
+    <uploader-element
+      data-multiple-files-upload
+      mutilple-files="true"
+    ></uploader-element>
     <h3>Single File Progress Upload:</h3>
-    <div data-single-file-progress>
-      <input data-upload type="file" />
-      <div style="display: none" data-file-name-container>
-        file name:
-        <input type="text" data-file-name />
-      </div>
-      <div>
-        <button style="display: none" data-button-upload>upload</button>
-      </div>
-    </div>
+    <uploader-element data-single-file-progress></uploader-element>
+
+    <h3>Duplex Upload</h3>
+    <uploader-element data-duplex-upload-file></uploader-element>
   </body>
 </html>
