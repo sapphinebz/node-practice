@@ -3,23 +3,16 @@ import {
   EMPTY,
   identity,
   MonoTypeOperatorFunction,
-  ReplaySubject,
   Subject,
 } from "rxjs";
-import {
-  catchError,
-  filter,
-  mergeMap,
-  share,
-  takeUntil,
-  tap,
-} from "rxjs/operators";
+import { catchError, filter, mergeMap, takeUntil, tap } from "rxjs/operators";
 import ws, { WebSocketServer } from "ws";
 import { fromListener } from "../operators/from-listener";
 export type WsMessage = [ws.WebSocket, string];
 export class WebSocketObservable {
   private readonly clientMessageSubject = new Subject<WsMessage>();
   private readonly serverBoardcastSubject = new Subject<WsMessage>();
+  private readonly onClientConnection$ = new Subject<ws.WebSocket>();
 
   readonly onCloseWebSocket$ = new AsyncSubject<void>();
   readonly onClientSentMessage$ = this.clientMessageSubject.asObservable();
@@ -41,12 +34,11 @@ export class WebSocketObservable {
       webSocketServer.close();
     });
 
-    const onClientConnected$ = fromListener<ws.WebSocket>(
-      webSocketServer,
-      "connection"
-    ).pipe(share());
+    fromListener<ws.WebSocket>(webSocketServer, "connection")
+      .pipe(takeUntil(this.onCloseWebSocket$))
+      .subscribe(this.onClientConnection$);
 
-    onClientConnected$
+    this.onClientConnection$
       .pipe(
         mergeMap((webSocketClient) => {
           return this.onServerSentMessage$.pipe(
@@ -67,7 +59,7 @@ export class WebSocketObservable {
       )
       .subscribe();
 
-    onClientConnected$
+    this.onClientConnection$
       .pipe(
         mergeMap((webSocketClient) => {
           return fromListener<ws.RawData>(webSocketClient, "message").pipe(
@@ -112,13 +104,4 @@ export class WebSocketObservable {
   private onClientCloseBrowser(webSocketClient: ws.WebSocket) {
     return fromListener(webSocketClient, "close");
   }
-
-  // private ignoreClientItself(
-  //   webSocketClient: ws.WebSocket
-  // ): MonoTypeOperatorFunction<WsMessage> {
-  //   return filter((message) => {
-  //     const [client, _] = message;
-  //     return client !== webSocketClient;
-  //   });
-  // }
 }

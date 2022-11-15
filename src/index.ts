@@ -16,7 +16,7 @@
 // import { Subject, throttleTime } from "rxjs";
 // import { Duplex, PassThrough } from "stream";
 
-import "./showcase/backend/upload-file/upload-file.js";
+// import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/stream-receivers/stream-receivers.js";
 // import "./showcase/backend/progress-download/progress-download.js";
