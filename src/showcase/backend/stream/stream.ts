@@ -31,22 +31,24 @@ app.get("/news", (request, response) => {
   news$.next({ request, response });
 });
 
-news$.subscribe(({ request, response }) => {
-  const duplex = writeStreamDuplex();
+news$
+  .pipe(
+    mergeMap(({ request, response }) => {
+      const duplex = writeStreamDuplex();
 
-  interval(1000)
-    .pipe(
-      take(10),
-      map((i) => `write-${i}`),
-      transferStream(duplex)
-    )
-    .subscribe();
+      response.status(200);
+      response.set("Content-Type", "text/plain");
 
-  response.status(200);
-  response.set("Content-Type", "text/plain");
+      duplex.pipe(response);
 
-  duplex.pipe(response);
-});
+      return interval(1000).pipe(
+        take(10),
+        map((i) => `write-${i}`),
+        transferStream(duplex)
+      );
+    })
+  )
+  .subscribe();
 
 const client$ = connectable(
   fromHttpExpress((handler) => {
