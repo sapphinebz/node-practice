@@ -3,10 +3,13 @@ import fs from "fs";
 import path from "path";
 import { Observable, Subscription } from "rxjs";
 import { concatMap, tap } from "rxjs/operators";
+import { Duplex, PassThrough } from "stream";
 import { fromHttpExpress } from "../../../express/from-http-express";
 import { createFolderIfNotExist } from "../../../file/folder/create-folder-if-not-exist";
 import { UploadMulter } from "../../../multer/upload-multer";
 import { fromListener } from "../../../operators/from-listener";
+import { fromWritable } from "../../../operators/from-writable";
+// import net from 'net';
 
 const uploadMulter = new UploadMulter({
   destination: path.join(__dirname, "uploads"),
@@ -46,6 +49,93 @@ fromHttpExpress((handler) => {
       const filePath = path.join(__dirname, "uploads", `${Date.now()}.${ext}`);
 
       return manualUpload(filePath, request, response).pipe(tap(console.log));
+    })
+  )
+  .subscribe();
+
+/**
+ * Upload Multiple Files
+ */
+
+fromHttpExpress((handler) => {
+  apiExpress.post("/upload-multiple-files", handler);
+})
+  .pipe(uploadMulter.uploadMultipleFiles("files"))
+  .subscribe(({ request, response }) => {
+    response.json({ message: "Successfully uploaded files" });
+  });
+
+/**
+ * Upload Sigle File Progress
+ */
+
+fromHttpExpress((handler) => {
+  apiExpress.post("/upload-single-file-progress", handler);
+})
+  .pipe(uploadMulter.uploadSingleFile("file"))
+  .subscribe(({ request, response }) => {
+    response.json({ message: "Successfully uploaded files" });
+  });
+
+fromHttpExpress((handler) => {
+  apiExpress.post("/duplex-single-file", handler);
+})
+  .pipe(
+    concatMap(({ request, response }) => {
+      console.log("upload");
+      const reportProgress = new PassThrough();
+
+      const filePath = path.join(__dirname, "uploads", `${Date.now()}.jpg`);
+
+      const writeStream = fs.createWriteStream(filePath);
+
+      const length = Number(request.headers["content-length"] || 0);
+      let total = 0;
+
+      reportProgress.on("data", (data: string | Buffer) => {
+        total += data.length;
+        console.log(`${total}/${length}`);
+      });
+
+      const duplex = new Duplex({
+        autoDestroy: true,
+        write(_chunk, encoding, next) {
+          console.log("write");
+          this.push(_chunk);
+          console.log("next");
+          next();
+        },
+        read() {
+          console.log("read");
+        },
+        final() {
+          console.log("final");
+          this.push(null);
+          // this.end();
+        },
+      });
+      duplex.pipe(response);
+
+      return fromWritable(
+        request.pipe(duplex).pipe(reportProgress).pipe(writeStream)
+      );
+
+      // pipeline bug ไรวะ
+      // return fromAbortController((abortController) => {
+      //   return stream_ps.pipeline(
+      //     request,
+      //     throttle,
+      //     reportProgress,
+      //     writeStream,
+      //     {
+      //       signal: abortController.signal,
+      //     }
+      //   );
+      // }).pipe(
+      //   tap(() => {
+      //     response.json({ success: true });
+      //   })
+      // );
     })
   )
   .subscribe();
@@ -93,27 +183,3 @@ function manualUpload(
     return subscription;
   });
 }
-
-/**
- * Upload Multiple Files
- */
-
-fromHttpExpress((handler) => {
-  apiExpress.post("/upload-multiple-files", handler);
-})
-  .pipe(uploadMulter.uploadMultipleFiles("files"))
-  .subscribe(({ request, response }) => {
-    response.json({ message: "Successfully uploaded files" });
-  });
-
-/**
- * Upload Sigle File Progress
- */
-
-fromHttpExpress((handler) => {
-  apiExpress.post("/upload-single-file-progress", handler);
-})
-  .pipe(uploadMulter.uploadSingleFile("file"))
-  .subscribe(({ request, response }) => {
-    response.json({ message: "Successfully uploaded files" });
-  });

@@ -100,9 +100,10 @@ import { UploaderElement } from "../shared/custom-element/uploader.element";
     return fromFetch("/duplex-single-file", {
       method: "POST",
       body: file,
-      selector: (res) => res.json(),
+      selector: (res) => res.blob(),
     }).pipe(
-      tap(() => {
+      tap((blob) => {
+        console.log(blob);
         uploaderElement.nextUpload();
       }),
       catchError((err) => {

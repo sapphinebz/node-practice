@@ -23,6 +23,7 @@ import { fromUploadInput } from "../from-upload-input";
 export class UploaderElement extends HTMLElement {
   includedFilename = true;
   uploadMultipleFiles = false;
+  imageOnly = false;
   onDestroy$ = new AsyncSubject<void>();
   onUploaded$ = new Subject<void>();
 
@@ -87,8 +88,9 @@ export class UploaderElement extends HTMLElement {
     )!;
 
     this.includedFilename = this.getAttribute("include-filename") === "true";
-
     this.uploadMultipleFiles = this.getAttribute("mutilple-files") === "true";
+    this.imageOnly = this.getAttribute("image-only") === "true";
+
     if (this.uploadMultipleFiles) {
       this.includedFilename = false;
       this.filesSelectedEl.style.display = "block";
@@ -106,6 +108,13 @@ export class UploaderElement extends HTMLElement {
       }).pipe(share());
 
       this.onSelectedUploadMultipleFiles$ = EMPTY;
+    }
+
+    if (this.imageOnly) {
+      this.inputFileEl.setAttribute(
+        "accept",
+        "image/png, image/gif, image/jpeg, image/x-png"
+      );
     }
   }
 
