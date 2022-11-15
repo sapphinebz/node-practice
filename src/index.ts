@@ -18,7 +18,7 @@
 
 // import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
-// import "./showcase/backend/stream-receivers/stream-receivers.js";
+import "./showcase/backend/stream/stream.js";
 // import "./showcase/backend/progress-download/progress-download.js";
 // import "./showcase/backend/json-database/json-database.js";
 // import "./showcase/backend/drag-drop/drag-drop.js";

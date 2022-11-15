@@ -5,6 +5,11 @@ export function fromCmdInput() {
   return new Observable<string>((subscriber) => {
     const stdin = process.stdin;
     stdin.setEncoding("utf-8");
-    return fromListener(stdin, "data").subscribe(subscriber);
+    const subscription = fromListener(stdin, "data").subscribe(subscriber);
+    return {
+      unsubscribe: () => {
+        subscription.unsubscribe();
+      },
+    };
   });
 }
