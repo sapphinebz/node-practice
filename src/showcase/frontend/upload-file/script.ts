@@ -1,6 +1,7 @@
 import { EMPTY } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import { catchError, tap } from "rxjs/operators";
+import { ajax } from "rxjs/ajax";
+import { catchError, first, map, tap } from "rxjs/operators";
 import { fromXMLHttpRequestUpload } from "../shared/from-xml-http-request-upload";
 
 // custom elements
@@ -105,6 +106,42 @@ import { UploaderElement } from "../shared/custom-element/uploader.element";
       tap((blob) => {
         console.log(blob);
         uploaderElement.nextUpload();
+      }),
+      catchError((err) => {
+        return EMPTY;
+      })
+    );
+  };
+}
+
+/**
+ * RxJS Ajax Upload
+ */
+{
+  const containerEl =
+    document.querySelector<HTMLElement>(`[data-ajax-upload]`)!;
+
+  const uploaderElement =
+    containerEl.querySelector<UploaderElement>("[data-uploader]")!;
+
+  const percentEl = document.querySelector<HTMLElement>(`[data-percent]`)!;
+
+  uploaderElement.uploadFactory = (file) => {
+    percentEl.innerText = `0 %`;
+    return ajax<any>({
+      url: "/upload-single-file",
+      method: "POST",
+      includeUploadProgress: true,
+      body: file,
+    }).pipe(
+      tap((ajaxResponse) => {
+        percentEl.innerText =
+          ((ajaxResponse.loaded / ajaxResponse.total) * 100).toFixed(2) + " %";
+      }),
+      first((ajaxResponse) => ajaxResponse.type === "upload_load"),
+      map((ajaxResponse) => {
+        uploaderElement.nextUpload();
+        return ajaxResponse.response;
       }),
       catchError((err) => {
         return EMPTY;
