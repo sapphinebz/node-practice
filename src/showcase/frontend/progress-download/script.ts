@@ -5,9 +5,11 @@ import {
   first,
   map,
   shareReplay,
+  startWith,
   switchMap,
   takeLast,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import { fromFetch } from "rxjs/fetch";
 import { ajax, AjaxResponse } from "rxjs/ajax";
@@ -164,6 +166,7 @@ import { percentString } from "../shared/percent-string";
 
 {
   const containerEl = document.querySelector<HTMLElement>(`[data-rxjs-ajax]`)!;
+  const fileSizeEl = document.querySelector<HTMLElement>(`[data-file-size]`)!;
   const downloadButtonEl = containerEl.querySelector<HTMLButtonElement>(
     "[data-download-button]"
   )!;
@@ -171,9 +174,24 @@ import { percentString } from "../shared/percent-string";
   const anchorEl = containerEl.querySelector<HTMLElement>(`[data-anchor]`)!;
 
   const percentEl = containerEl.querySelector<HTMLElement>(`[data-percent]`)!;
+
+  const total$ = ajax<any>({
+    url: `http://localhost:3000/pdf-packt`,
+    method: "HEAD",
+    responseType: "blob",
+    crossDomain: true,
+  }).pipe(
+    map((ajaxRes) => ajaxRes.total),
+    startWith(0)
+  );
+
+  total$.subscribe((total) => {
+    fileSizeEl.innerText = `file size: ${total} bytes`;
+  });
+
   const blob$ = fromEvent(downloadButtonEl, "click").pipe(
     exhaustMap(() => {
-      percentEl.innerText = `0/0`;
+      percentEl.innerText = ``;
       return ajax<Blob>({
         url: `http://localhost:3000/pdf-packt`,
         includeDownloadProgress: true,
@@ -185,10 +203,10 @@ import { percentString } from "../shared/percent-string";
         headers: { "Access-Control-Allow-Origin": location.origin },
       }).pipe(
         tap((ajaxResponse) => {
-          percentEl.innerText = percentString(
+          percentEl.innerText = `progress: ${percentString(
             ajaxResponse.loaded,
             ajaxResponse.total
-          );
+          )}`;
         }),
         first((ajaxResponse) => {
           return ajaxResponse.type === "download_load";

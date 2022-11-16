@@ -1,6 +1,6 @@
 import express from "express";
 import path from "path";
-import { concat } from "rxjs";
+import { concat, merge } from "rxjs";
 import { mergeMap, shareReplay } from "rxjs/operators";
 import { fromHttpExpress } from "../../../express/from-http-express";
 import { allowOrigin } from "../../../express/middlewares/allow-origin";
@@ -74,9 +74,22 @@ apiExpress.get("/data", allowOrigin(FRONT_END_ORIGIN), (request, response) => {
 });
 
 apiExpress.options("/pdf-packt", optionsEnableCors(FRONT_END_ORIGIN));
-fromHttpExpress((handler) => {
+const getPdfPackt$ = fromHttpExpress((handler) => {
   apiExpress.get("/pdf-packt", allowOrigin(FRONT_END_ORIGIN), handler);
-})
+});
+
+const headPdfPackt$ = fromHttpExpress((handler) => {
+  apiExpress.head(
+    "/pdf-packt",
+    allowOrigin(FRONT_END_ORIGIN),
+    (request, response) => {
+      response.statusCode = 204;
+    },
+    handler
+  );
+});
+
+merge(getPdfPackt$, headPdfPackt$)
   .pipe(
     mergeMap((client) => {
       const { response } = client;
