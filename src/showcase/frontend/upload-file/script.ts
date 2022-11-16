@@ -7,6 +7,7 @@ import { fromXMLHttpRequestUpload } from "../shared/from-xml-http-request-upload
 // custom elements
 import "../shared/custom-element/uploader.element";
 import { UploaderElement } from "../shared/custom-element/uploader.element";
+import { percentString } from "../shared/percent-string";
 
 /**
  * Single File Upload (Attached Body)
@@ -135,8 +136,10 @@ import { UploaderElement } from "../shared/custom-element/uploader.element";
       body: file,
     }).pipe(
       tap((ajaxResponse) => {
-        percentEl.innerText =
-          ((ajaxResponse.loaded / ajaxResponse.total) * 100).toFixed(2) + " %";
+        percentEl.innerText = percentString(
+          ajaxResponse.loaded,
+          ajaxResponse.total
+        );
       }),
       first((ajaxResponse) => ajaxResponse.type === "upload_load"),
       map((ajaxResponse) => {

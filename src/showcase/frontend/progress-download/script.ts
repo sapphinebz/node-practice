@@ -13,6 +13,8 @@ import { fromFetch } from "rxjs/fetch";
 import { ajax, AjaxResponse } from "rxjs/ajax";
 import { fromXMLHttpRequestDownload } from "../shared/from-xml-http-request-download";
 import { clickAnchorDownload } from "../shared/click-anchor-download";
+import { exactFilename } from "../shared/exact-filename";
+import { percentString } from "../shared/percent-string";
 
 {
   const containerEl = document.querySelector<HTMLElement>(
@@ -22,6 +24,9 @@ import { clickAnchorDownload } from "../shared/click-anchor-download";
   const downloadStreamEl = containerEl.querySelector<HTMLButtonElement>(
     "[data-downloadStreamEl]"
   )!;
+
+  // เดี๋ยวค่อยทำ ขี้เกียจ
+  const anchorEl = document.querySelector<HTMLElement>(`[data-anchor]`)!;
 
   const percentEl =
     containerEl.querySelector<HTMLSpanElement>("[data-percent]")!;
@@ -51,25 +56,45 @@ import { clickAnchorDownload } from "../shared/click-anchor-download";
   const containerEl =
     document.querySelector<HTMLElement>(`[data-download-pdf]`)!;
 
+  const anchorEl = document.querySelector<HTMLElement>(`[data-anchor]`)!;
+
   const downloadEl = containerEl.querySelector<HTMLButtonElement>(
     "[data-download-button]"
   )!;
-  fromEvent(downloadEl, "click")
+  const blob$ = fromEvent(downloadEl, "click").pipe(
+    exhaustMap(() => {
+      return fromFetch(`http://localhost:3000/pdf`, {
+        method: "GET",
+        headers: {
+          "Access-Control-Allow-Origin": location.origin,
+        },
+        selector: (res) => res.blob(),
+      }).pipe(
+        catchError((err) => {
+          alert(err);
+          return EMPTY;
+        })
+      );
+    }),
+    shareReplay(1)
+  );
+
+  blob$
     .pipe(
-      exhaustMap(() => {
-        return fromFetch(`http://localhost:3000/pdf`, {
-          method: "GET",
-          headers: {
-            "Access-Control-Allow-Origin": location.origin,
-          },
-          selector: (res) => res.blob(),
-        }).pipe(
-          catchError((err) => {
-            alert(err);
-            return EMPTY;
-          }),
-          tap((blob) => {
-            clickAnchorDownload(blob, "rxjs.pdf");
+      switchMap((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.innerText = "get this file";
+        anchorEl.innerHTML = "";
+        anchorEl.append(anchor);
+        anchor.href = blobUrl;
+        anchor.download = "RxJS.pdf";
+
+        return fromEvent(anchor, "click").pipe(
+          tap({
+            unsubscribe: () => {
+              URL.revokeObjectURL(blobUrl);
+            },
           })
         );
       })
@@ -160,7 +185,10 @@ import { clickAnchorDownload } from "../shared/click-anchor-download";
         headers: { "Access-Control-Allow-Origin": location.origin },
       }).pipe(
         tap((ajaxResponse) => {
-          percentEl.innerText = `${ajaxResponse.loaded}/${ajaxResponse.total}`;
+          percentEl.innerText = percentString(
+            ajaxResponse.loaded,
+            ajaxResponse.total
+          );
         }),
         first((ajaxResponse) => {
           return ajaxResponse.type === "download_load";
@@ -168,9 +196,9 @@ import { clickAnchorDownload } from "../shared/click-anchor-download";
         map((ajaxResponse) => {
           const blob = ajaxResponse.response;
           const filename =
-            ajaxResponse.responseHeaders["content-disposition"].match(
-              /filename\=(.+?)(?:\r|\n)/
-            )?.[1] || "RxJS.pdf";
+            exactFilename(
+              ajaxResponse.responseHeaders["content-disposition"]
+            ) || "RxJS.pdf";
           return [blob, filename] as const;
         }),
         catchError((err) => {
