@@ -66,3 +66,27 @@ apiExpress.get("/data", allowOrigin(FRONT_END_ORIGIN), (request, response) => {
     ],
   });
 });
+
+apiExpress.options("/pdf-packt", optionsEnableCors(FRONT_END_ORIGIN));
+fromHttpExpress((handler) => {
+  apiExpress.get("/pdf-packt", allowOrigin(FRONT_END_ORIGIN), handler);
+})
+  .pipe(
+    mergeMap((client) => {
+      const { response } = client;
+      // ให้เปิดเผย headers ของ response ให้กับ client ถ้าต่าง origin
+      response.set("Access-Control-Expose-Headers", "*");
+      return readFileStreamToResponse({
+        filePath: path.join(
+          process.cwd(),
+          "public",
+          "assets",
+          "pdf",
+          "Packt.Reactive.Patterns.with.RxJS.for.Angular.1801811512.pdf"
+        ),
+        fileName: "packt.pdf",
+        streamToResponse: client.response,
+      });
+    })
+  )
+  .subscribe();

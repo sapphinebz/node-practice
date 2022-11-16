@@ -37,7 +37,7 @@ export function fromXMLHttpRequestUpload(url: string, formData: FormData) {
     const uploadErrorHandler = (
       event: ProgressEvent<XMLHttpRequestEventTarget>
     ) => {
-      subscriber.error(event);
+      subscriber.error(request.statusText);
     };
     request.upload.addEventListener("error", uploadErrorHandler);
 
