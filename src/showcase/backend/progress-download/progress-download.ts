@@ -21,7 +21,13 @@ const _pdfPath = `${__dirname}/pdf/rxjs.pdf`;
 const downloadPdf$ = httpDownload(
   `https://hoclaptrinhdanang.com/downloads/pdf/react/RxJS%20in%20Action.pdf`,
   _pdfPath
-).pipe(shareReplay(1));
+).pipe(
+  shareReplay({
+    refCount: false,
+    bufferSize: 1,
+    windowTime: 20000,
+  })
+);
 
 apiExpress.options("/package", optionsEnableCors(FRONT_END_ORIGIN));
 apiExpress.get(
