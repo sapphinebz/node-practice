@@ -153,6 +153,30 @@ import { percentString } from "../shared/percent-string";
   };
 }
 
+{
+  const containerEl = document.querySelector<HTMLElement>(
+    `[data-throttle-upload-text-file]`
+  )!;
+
+  const uploaderElement =
+    containerEl.querySelector<UploaderElement>("[data-uploader]")!;
+
+  uploaderElement.uploadFactory = (file) => {
+    return ajax<any>({
+      url: "/upload-single-file-throttle",
+      method: "POST",
+      body: file,
+    }).pipe(
+      tap(() => {
+        uploaderElement.nextUpload();
+      }),
+      catchError((err) => {
+        return EMPTY;
+      })
+    );
+  };
+}
+
 // application/x-www-form-urlencoded
 // application/json
 // multipart/form-data

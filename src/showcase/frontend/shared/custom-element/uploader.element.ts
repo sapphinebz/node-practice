@@ -24,6 +24,7 @@ export class UploaderElement extends HTMLElement {
   includedFilename = true;
   uploadMultipleFiles = false;
   imageOnly = false;
+  textOnly = false;
   onDestroy$ = new AsyncSubject<void>();
   onUploaded$ = new Subject<void>();
 
@@ -90,6 +91,7 @@ export class UploaderElement extends HTMLElement {
     this.includedFilename = this.getAttribute("include-filename") === "true";
     this.uploadMultipleFiles = this.getAttribute("mutilple-files") === "true";
     this.imageOnly = this.getAttribute("image-only") === "true";
+    this.textOnly = this.getAttribute("text-only") === "true";
 
     if (this.uploadMultipleFiles) {
       this.includedFilename = false;
@@ -115,6 +117,8 @@ export class UploaderElement extends HTMLElement {
         "accept",
         "image/png, image/gif, image/jpeg, image/x-png"
       );
+    } else if (this.textOnly) {
+      this.inputFileEl.setAttribute("accept", "text/plain");
     }
   }
 

@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { Observable, Subscription } from "rxjs";
 import { concatMap, tap } from "rxjs/operators";
-import { Duplex, PassThrough } from "stream";
+import { Duplex, PassThrough, Writable } from "stream";
 import { fromHttpExpress } from "../../../express/from-http-express";
 import { createFolderIfNotExist } from "../../../file/folder/create-folder-if-not-exist";
 import { UploadMulter } from "../../../multer/upload-multer";
@@ -76,6 +76,30 @@ fromHttpExpress((handler) => {
   .subscribe(({ request, response }) => {
     response.json({ message: "Successfully uploaded files" });
   });
+
+fromHttpExpress((handler) => {
+  apiExpress.post("/upload-single-file-throttle", handler);
+})
+  .pipe(
+    concatMap(({ request, response }) => {
+      const writeable = new Writable({
+        write(chunk, encoding, next) {
+          console.log("chunk", chunk);
+          setTimeout(() => {
+            next();
+          }, 500);
+        },
+      });
+
+      return new Observable((subscriber) => {
+        request.pipe(writeable).on("finish", () => {
+          response.json({ result: true });
+          subscriber.complete();
+        });
+      });
+    })
+  )
+  .subscribe();
 
 fromHttpExpress((handler) => {
   apiExpress.post("/duplex-single-file", handler);

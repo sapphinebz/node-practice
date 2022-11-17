@@ -16,10 +16,10 @@
 // import { Subject, throttleTime } from "rxjs";
 // import { Duplex, PassThrough } from "stream";
 
-// import "./showcase/backend/upload-file/upload-file.js";
+import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/stream/stream.js";
-import "./showcase/backend/progress-download/progress-download.js";
+// import "./showcase/backend/progress-download/progress-download.js";
 // import "./showcase/backend/json-database/json-database.js";
 // import "./showcase/backend/drag-drop/drag-drop.js";
 
@@ -150,39 +150,3 @@ import "./showcase/backend/progress-download/progress-download.js";
 //     // Pass to next layer of middleware
 //     next();
 //     });
-// import fs from "fs";
-// class Throttle extends Duplex {
-//   onWrite$ = new Subject<{ chunk: any; callback: any }>();
-//   constructor() {
-//     super();
-
-//     this.onWrite$.pipe(throttleTime(1000)).subscribe(({ chunk, callback }) => {
-//       console.log("subscribe");
-//       this.push(chunk);
-//     });
-//   }
-
-//   _read(size: number): void {}
-
-//   _write(
-//     chunk: any,
-//     encoding: BufferEncoding,
-//     callback: (error?: Error | null | undefined) => void
-//   ): void {
-//     console.log("write");
-//     this.onWrite$.next({ chunk, callback });
-
-//     callback();
-//   }
-
-//   _final(callback: (error?: Error | null | undefined) => void): void {}
-// }
-// const writable = fs.createWriteStream(__dirname + "/text.txt");
-// const throttle = new Throttle();
-// process.stdin.pipe(throttle).pipe(writable);
-
-// const report = new PassThrough({ encoding: "utf8" });
-// report.on("data", (data) => {
-//   console.log("--data", data);
-// });
-// process.stdin.pipe(report);
