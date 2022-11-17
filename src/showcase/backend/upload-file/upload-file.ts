@@ -82,6 +82,7 @@ fromHttpExpress((handler) => {
 })
   .pipe(
     concatMap(({ request, response }) => {
+      // throttle writeable แต่ยังไม่รู้จะเอาไว้ทำอะไร
       const writeable = new Writable({
         write(chunk, encoding, next) {
           console.log("chunk", chunk);
