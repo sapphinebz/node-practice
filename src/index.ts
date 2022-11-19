@@ -8,6 +8,12 @@
 // import "./showcase/upload-file/upload-file.js";
 // import "./showcase/upload-form-data-multer/upload-form-data-multer.js";
 
+import { concatDelayStream } from "./stream/concat-delay-stream";
+
+// import { Readable, Transform, Writable } from "stream";
+// import fs from "fs";
+// import { interval, map, take } from "rxjs";
+
 // import { FromDirectory } from "./file/folder/from-directory";
 // import { fromArgs } from "./stdin/from-args";
 // import { fromCmdInput } from "./stdin/from-cmd-input";
@@ -16,7 +22,7 @@
 // import { Subject, throttleTime } from "rxjs";
 // import { Duplex, PassThrough } from "stream";
 
-import "./showcase/backend/upload-file/upload-file.js";
+// import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/stream/stream.js";
 // import "./showcase/backend/progress-download/progress-download.js";
@@ -150,3 +156,43 @@ import "./showcase/backend/upload-file/upload-file.js";
 //     // Pass to next layer of middleware
 //     next();
 //     });
+
+// const transform = new Transform({
+//   encoding: "utf-8",
+//   transform(chunk: string, encoding, next) {
+//     this.push(`${chunk}`.replace("data:", "repeat:"));
+//     setTimeout(() => {
+//       next();
+//     }, 1000);
+//   },
+// });
+
+// async function* generateDelay(delay: number) {
+//   console.log("create");
+//   let i = 1;
+//   const _delay = () =>
+//     new Promise<void>((resolve) => {
+//       setTimeout(() => {
+//         resolve();
+//       }, delay);
+//     });
+//   while (i <= 10) {
+//     await _delay();
+//     yield `data:${i++}`;
+//   }
+// }
+// const readableStream = Readable.from(generateDelay(1000));
+
+// readableStream.pipe(transform);
+// transform.on("data", (data) => {
+//   console.log(data);
+// });
+
+import { Readable } from "stream";
+import { range } from "./generator/range";
+import { readableRange } from "./stream/readable-range";
+import { throttleStream } from "./stream/throttle-stream";
+
+process.stdin.pipe(throttleStream(2500), { end: true }).on("data", (data) => {
+  console.log(`output: ${data}`);
+});
