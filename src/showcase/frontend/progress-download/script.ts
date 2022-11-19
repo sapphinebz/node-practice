@@ -17,6 +17,7 @@ import { fromXMLHttpRequestDownload } from "../shared/from-xml-http-request-down
 import { clickAnchorDownload } from "../shared/click-anchor-download";
 import { exactFilename } from "../shared/exact-filename";
 import { percentString } from "../shared/percent-string";
+import { createDownloadAnchor } from "../shared/create-download-anchor";
 
 {
   const containerEl = document.querySelector<HTMLElement>(
@@ -27,8 +28,8 @@ import { percentString } from "../shared/percent-string";
     "[data-downloadStreamEl]"
   )!;
 
-  // เดี๋ยวค่อยทำ ขี้เกียจ
-  const anchorEl = document.querySelector<HTMLElement>(`[data-anchor]`)!;
+  const anchorContainerEl =
+    containerEl.querySelector<HTMLElement>(`[data-anchor]`)!;
 
   const percentEl =
     containerEl.querySelector<HTMLSpanElement>("[data-percent]")!;
@@ -45,8 +46,17 @@ import { percentString } from "../shared/percent-string";
             percentEl.innerText = `${res.percent}%`;
           }),
           takeLast(1),
-          tap((res) => {
-            clickAnchorDownload(res.data!, "rxjs.pdf");
+          switchMap((res) => {
+            const [anchorEl, onClickDownload$] = createDownloadAnchor(
+              res.data!,
+              "RxJS-online.pdf",
+              "RxJS-online.pdf"
+            );
+
+            anchorContainerEl.innerHTML = "";
+            anchorContainerEl.append(anchorEl);
+
+            return onClickDownload$;
           })
         );
       })
@@ -58,7 +68,8 @@ import { percentString } from "../shared/percent-string";
   const containerEl =
     document.querySelector<HTMLElement>(`[data-download-pdf]`)!;
 
-  const anchorEl = document.querySelector<HTMLElement>(`[data-anchor]`)!;
+  const anchorContainerEl =
+    document.querySelector<HTMLElement>(`[data-anchor]`)!;
 
   const downloadEl = containerEl.querySelector<HTMLButtonElement>(
     "[data-download-button]"
@@ -84,21 +95,14 @@ import { percentString } from "../shared/percent-string";
   blob$
     .pipe(
       switchMap((blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.innerText = "get this file";
-        anchorEl.innerHTML = "";
-        anchorEl.append(anchor);
-        anchor.href = blobUrl;
-        anchor.download = "RxJS.pdf";
-
-        return fromEvent(anchor, "click").pipe(
-          tap({
-            unsubscribe: () => {
-              URL.revokeObjectURL(blobUrl);
-            },
-          })
+        const [anchorEl, onClickDownload$] = createDownloadAnchor(
+          blob,
+          "RxJS.pdf"
         );
+        anchorContainerEl.innerHTML = "";
+        anchorContainerEl.append(anchorEl);
+
+        return onClickDownload$;
       })
     )
     .subscribe();
@@ -146,6 +150,9 @@ import { percentString } from "../shared/percent-string";
     "[data-download-button]"
   )!;
 
+  const anchorContainerEl =
+    containerEl.querySelector<HTMLElement>(`[data-anchor]`)!;
+
   fromEvent<PointerEvent>(downloadEl, "click")
     .pipe(
       exhaustMap(() =>
@@ -155,8 +162,17 @@ import { percentString } from "../shared/percent-string";
           },
           selector: (resp) => resp.blob(),
         }).pipe(
-          tap((blob) => {
-            clickAnchorDownload(blob, "package.json");
+          switchMap((blob) => {
+            const [anchorEl, onClickDownload$] = createDownloadAnchor(
+              blob,
+              "package.json",
+              "package.json"
+            );
+
+            anchorContainerEl.innerHTML = "";
+            anchorContainerEl.append(anchorEl);
+
+            return onClickDownload$;
           })
         )
       )
@@ -171,7 +187,8 @@ import { percentString } from "../shared/percent-string";
     "[data-download-button]"
   )!;
 
-  const anchorEl = containerEl.querySelector<HTMLElement>(`[data-anchor]`)!;
+  const anchorContainerEl =
+    containerEl.querySelector<HTMLElement>(`[data-anchor]`)!;
 
   const percentEl = containerEl.querySelector<HTMLElement>(`[data-percent]`)!;
 
@@ -231,21 +248,16 @@ import { percentString } from "../shared/percent-string";
   blob$
     .pipe(
       switchMap(([blob, filename]) => {
-        const blobUrl = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.innerText = filename || "get this file";
-        anchorEl.innerHTML = "";
-        anchorEl.append(anchor);
-        anchor.href = blobUrl;
-        anchor.download = filename;
-
-        return fromEvent(anchor, "click").pipe(
-          tap({
-            unsubscribe: () => {
-              URL.revokeObjectURL(blobUrl);
-            },
-          })
+        const [anchorEl, onClickDownload$] = createDownloadAnchor(
+          blob,
+          "RxJS.pdf",
+          filename
         );
+
+        anchorContainerEl.innerHTML = "";
+        anchorContainerEl.append(anchorEl);
+
+        return onClickDownload$;
       })
     )
     .subscribe();

@@ -25,7 +25,7 @@ import { concatDelayStream } from "./stream/concat-delay-stream";
 // import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/stream/stream.js";
-// import "./showcase/backend/progress-download/progress-download.js";
+import "./showcase/backend/progress-download/progress-download.js";
 // import "./showcase/backend/json-database/json-database.js";
 // import "./showcase/backend/drag-drop/drag-drop.js";
 
@@ -188,11 +188,4 @@ import { concatDelayStream } from "./stream/concat-delay-stream";
 //   console.log(data);
 // });
 
-import { Readable } from "stream";
-import { range } from "./generator/range";
-import { readableRange } from "./stream/readable-range";
-import { throttleStream } from "./stream/throttle-stream";
-
-process.stdin.pipe(throttleStream(2500), { end: true }).on("data", (data) => {
-  console.log(`output: ${data}`);
-});
+// process.stdin.pipe();
