@@ -1,9 +1,9 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { Observable, Subscription } from "rxjs";
-import { concatMap, tap } from "rxjs/operators";
-import { Duplex, PassThrough, Writable } from "stream";
+import { Observable, Subject, Subscription } from "rxjs";
+import { concatMap, mergeMap, tap } from "rxjs/operators";
+import { Duplex, PassThrough, Readable } from "stream";
 import { fromHttpExpress } from "../../../express/from-http-express";
 import { createFolderIfNotExist } from "../../../file/folder/create-folder-if-not-exist";
 import { UploadMulter } from "../../../multer/upload-multer";
@@ -77,30 +77,80 @@ fromHttpExpress((handler) => {
     response.json({ message: "Successfully uploaded files" });
   });
 
-fromHttpExpress((handler) => {
-  apiExpress.post("/upload-single-file-throttle", handler);
-})
-  .pipe(
-    concatMap(({ request, response }) => {
-      // throttle writeable แต่ยังไม่รู้จะเอาไว้ทำอะไร
-      const writeable = new Writable({
-        write(chunk, encoding, next) {
-          console.log("chunk", chunk);
-          setTimeout(() => {
-            next();
-          }, 500);
-        },
-      });
+const onBusboyFile$ = new Subject<{
+  fieldname: string;
+  file: Readable;
+  info: {
+    filename: string;
+    encoding: string;
+    mimeType: string;
+  };
+  response: express.Response;
+  request: express.Request;
+}>();
 
-      return new Observable((subscriber) => {
-        request.pipe(writeable).on("finish", () => {
-          response.json({ result: true });
-          subscriber.complete();
-        });
+onBusboyFile$
+  .pipe(
+    mergeMap(({ fieldname, file, info, request, response }) => {
+      return new Promise<void>((resolve, reject) => {
+        const { filename } = info;
+        const stream = fs.createWriteStream(
+          path.join(__dirname, "uploads", `${Date.now()}${filename}`)
+        );
+        file
+          .pipe(stream)
+          .on("finish", () => {
+            resolve();
+          })
+          .on("close", () => {
+            resolve();
+          })
+          .on("error", (err) => {
+            reject(err);
+          });
+      }).catch((err) => {
+        console.error(err);
       });
     })
   )
   .subscribe();
+
+fromHttpExpress((handler) => {
+  apiExpress.post("/upload-single-file-throttle", handler);
+}).subscribe(({ request, response }) => {
+  const busboy = require("busboy");
+
+  let bb: any;
+  bb = busboy({ headers: request.headers });
+
+  bb.on(
+    "file",
+    (
+      fieldname: string,
+      file: Readable,
+      info: {
+        filename: string;
+        encoding: string;
+        mimeType: string;
+      }
+    ) => {
+      onBusboyFile$.next({ fieldname, file, info, request, response });
+    }
+  );
+
+  bb.on("field", (fieldname: string, value: any, info: any) => {});
+
+  bb.on("close", () => {
+    response.end();
+  });
+
+  bb.on("error", (err: any) => {
+    response.writeHead(500);
+    response.end(err);
+  });
+
+  request.pipe(bb);
+});
 
 fromHttpExpress((handler) => {
   apiExpress.post("/duplex-single-file", handler);

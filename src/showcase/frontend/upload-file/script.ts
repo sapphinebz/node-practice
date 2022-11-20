@@ -162,13 +162,29 @@ import { percentString } from "../shared/percent-string";
     containerEl.querySelector<UploaderElement>("[data-uploader]")!;
 
   uploaderElement.uploadFactory = (file) => {
-    return ajax<any>({
-      url: "/upload-single-file-throttle",
+    const formData = new FormData();
+    formData.set("file", file, file.name);
+    return fromFetch<any>("/upload-single-file-throttle", {
       method: "POST",
-      body: file,
+      body: formData,
+      selector: async function* (res) {
+        const reader = res
+          .body!.pipeThrough(new TextDecoderStream())
+          .getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) return;
+          yield value;
+        }
+      },
     }).pipe(
-      tap(() => {
-        uploaderElement.nextUpload();
+      tap({
+        next(value) {
+          console.log("response", value);
+        },
+        complete: () => {
+          uploaderElement.nextUpload();
+        },
       }),
       catchError((err) => {
         return EMPTY;
