@@ -1,20 +1,27 @@
-import { from, ReplaySubject, Subject } from "rxjs";
+import { AsyncSubject, from, Observable, ReplaySubject, Subject } from "rxjs";
 import { switchMap, share, bufferWhen, filter, map, tap } from "rxjs/operators";
 import SerialPort from "serialport";
 import { fromListener } from "../operators/from-listener";
 
 export class FromArduino {
-  private onOpen$ = new ReplaySubject<void>(1);
   private command$ = new ReplaySubject<string>(1);
+  private end$ = new AsyncSubject<void>();
 
+  onOpen$ = new ReplaySubject<void>(1);
+  onError$ = new ReplaySubject<any>(1);
   data$ = new Subject<string>();
-
-  serialPort = SerialPort;
 
   constructor(private options: { path: string; baudRate: number }) {
     const arduino = new SerialPort(this.options.path, {
       baudRate: this.options.baudRate,
     });
+
+    this.end$.subscribe(() => {
+      arduino.close();
+      // arduino.end();
+    });
+
+    fromListener(arduino, "error").subscribe(this.onError$);
 
     fromListener(arduino, "open").subscribe(this.onOpen$);
 
@@ -66,5 +73,10 @@ export class FromArduino {
   setPin(pin: number, value: "H" | "L") {
     const command = `ATDO${value}+${pin}`;
     this.sendCommand(command);
+  }
+
+  end() {
+    this.end$.next();
+    this.end$.complete();
   }
 }
