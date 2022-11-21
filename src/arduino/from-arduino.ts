@@ -1,5 +1,13 @@
 import { AsyncSubject, from, Observable, ReplaySubject, Subject } from "rxjs";
-import { switchMap, share, bufferWhen, filter, map, tap } from "rxjs/operators";
+import {
+  switchMap,
+  share,
+  bufferWhen,
+  filter,
+  map,
+  tap,
+  takeUntil,
+} from "rxjs/operators";
 import SerialPort from "serialport";
 import { fromListener } from "../operators/from-listener";
 
@@ -21,9 +29,13 @@ export class FromArduino {
       // arduino.end();
     });
 
-    fromListener(arduino, "error").subscribe(this.onError$);
+    fromListener(arduino, "error")
+      .pipe(takeUntil(this.end$))
+      .subscribe(this.onError$);
 
-    fromListener(arduino, "open").subscribe(this.onOpen$);
+    fromListener(arduino, "open")
+      .pipe(takeUntil(this.end$))
+      .subscribe(this.onOpen$);
 
     const bufferData$ = this.onOpen$.pipe(
       switchMap(() => {
@@ -42,7 +54,8 @@ export class FromArduino {
         map((bufferList) => {
           const bufferCombine = Buffer.concat(bufferList);
           return `${bufferCombine}`.trim();
-        })
+        }),
+        takeUntil(this.end$)
       )
       .subscribe(this.data$);
 
@@ -56,7 +69,8 @@ export class FromArduino {
               arduino.write(command);
             })
           );
-        })
+        }),
+        takeUntil(this.end$)
       )
       .subscribe();
   }
