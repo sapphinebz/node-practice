@@ -164,6 +164,8 @@ import { percentString } from "../shared/percent-string";
   uploaderElement.uploadFactory = (file) => {
     const formData = new FormData();
     formData.set("file", file, file.name);
+    formData.set("firstname", "Thanadit");
+    formData.set("lastname", "Buthong");
     return fromFetch<any>("/upload-multi-file-busboy", {
       method: "POST",
       body: formData,

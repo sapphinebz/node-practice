@@ -1,15 +1,15 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { merge, Observable, Subject, Subscription } from "rxjs";
+import { merge, Observable, Subscription } from "rxjs";
 import { concatMap, mergeMap, tap } from "rxjs/operators";
-import { Duplex, PassThrough, Readable } from "stream";
+import { Duplex, PassThrough } from "stream";
 import { fromHttpExpress } from "../../../express/from-http-express";
 import { createFolderIfNotExist } from "../../../file/folder/create-folder-if-not-exist";
 import { UploadMulter } from "../../../multer/upload-multer";
+import { connectToBusboy } from "../../../operators/connect-to-busboy";
 import { fromListener } from "../../../operators/from-listener";
 import { fromWritable } from "../../../operators/from-writable";
-import { connectToBusboy } from "../../../operators/connect-to-busboy";
 // import net from 'net';
 
 const uploadMulter = new UploadMulter({
@@ -82,12 +82,25 @@ fromHttpExpress((handler) => {
   apiExpress.post("/upload-multi-file-busboy", handler);
 })
   .pipe(
-    connectToBusboy(),
-    concatMap(({ onClose$, onField$, onFile$ }) => {
+    connectToBusboy({
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+        // fieldSize: 1,
+        // fileSize: 1,
+        // fields: 1,
+      },
+    }),
+    concatMap(({ onClose$, onField$, onFile$, onError$ }) => {
       const close$ = onClose$.pipe(
         tap(({ response }) => {
           response.statusCode = 200;
           response.json({ success: true });
+        })
+      );
+
+      const error$ = onError$.pipe(
+        tap(({ error, request, response }) => {
+          response.status(500).send({ error: "Something failed!" });
         })
       );
       const file$ = onFile$.pipe(
@@ -112,7 +125,7 @@ fromHttpExpress((handler) => {
         })
       );
 
-      return merge(close$, file$);
+      return merge(close$, file$, error$);
     })
   )
   .subscribe();
