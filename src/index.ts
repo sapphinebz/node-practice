@@ -2,6 +2,9 @@
 // import fs from "fs";
 // import { interval, map, take } from "rxjs";
 
+import EventEmitter from "node:events";
+import { fromListener } from "./operators/from-listener";
+
 // import { FromDirectory } from "./file/folder/from-directory";
 // import { fromArgs } from "./stdin/from-args";
 // import { fromCmdInput } from "./stdin/from-cmd-input";
@@ -10,7 +13,7 @@
 // import { Subject, throttleTime } from "rxjs";
 // import { Duplex, PassThrough } from "stream";
 
-import "./showcase/backend/upload-file/upload-file.js";
+// import "./showcase/backend/upload-file/upload-file.js";
 // import "./showcase/backend/cors-policy/cors-policy.js";
 // import "./showcase/backend/stream/stream.js";
 // import "./showcase/backend/progress-download/progress-download.js";
@@ -177,3 +180,9 @@ import "./showcase/backend/upload-file/upload-file.js";
 // });
 
 // process.stdin.pipe();
+
+const myEmitter = new EventEmitter();
+
+fromListener(myEmitter, "events", { args: true }).subscribe(console.log);
+
+myEmitter.emit("events", 12, 234, 234, 234);

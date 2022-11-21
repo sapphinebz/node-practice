@@ -4,11 +4,11 @@ import { EventEmitter } from "stream";
 export function fromListener<T = any>(
   eventStream: EventEmitter,
   eventName: string,
-  options?: { once: boolean }
+  options?: { once?: boolean; args?: boolean }
 ) {
-  return new Observable<T>((subscriber) => {
-    const handler = (event: T) => {
-      subscriber.next(event);
+  return new Observable<any>((subscriber) => {
+    const handler = (...event: any) => {
+      subscriber.next(options?.args ? event : event[0]);
       if (options?.once) {
         subscriber.complete();
       }
