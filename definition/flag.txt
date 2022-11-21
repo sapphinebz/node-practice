@@ -1,0 +1,4 @@
+r — Open the file in read-only mode.
+r+ — Open the file for reading and writing.
+w — Open the file in write-only mode.
+w+ — Open the file for reading and writing, placing the stream at the start of the file.

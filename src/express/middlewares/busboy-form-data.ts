@@ -1,9 +1,5 @@
-import { RequestHandler } from "express";
+import express, { RequestHandler } from "express";
 import { Readable } from "stream";
-import { fromListener } from "../../operators/from-listener";
-import { take, share, AsyncSubject } from "rxjs";
-
-import fs from "fs";
 
 const busboy = require("busboy");
 
@@ -37,7 +33,26 @@ export function isBusboyFormDataBody(
   return (body as BusboyFormDataBody).value !== undefined;
 }
 
-export function formDataObject(): RequestHandler {
+export function busboyFormData(options: {
+  onFile: (fileOptions: {
+    fieldname: string;
+    file: Readable;
+    info: BusboyInfo;
+    request: express.Request;
+    response: express.Response;
+  }) => void;
+  onClose: (closeOptions: {
+    request: express.Request;
+    response: express.Response;
+  }) => void;
+  onField: (fieldOptions: {
+    fieldname: string;
+    value: any;
+    info: BusboyInfo;
+    request: express.Request;
+    response: express.Response;
+  }) => void;
+}): RequestHandler {
   return (request, response, next) => {
     const formData = new Map();
     let bb: any;
@@ -47,29 +62,31 @@ export function formDataObject(): RequestHandler {
       next(err);
     }
 
-    const onClose$ = new AsyncSubject<void>();
-
     bb.on("file", (fieldname: string, file: Readable, info: BusboyInfo) => {
-      formData.set(fieldname, { file, info });
+      options.onFile({
+        fieldname,
+        file,
+        info,
+        request,
+        response,
+      });
     });
 
     bb.on("field", (fieldname: string, value: any, info: any) => {
-      formData.set(fieldname, { value, info });
+      options.onField({ fieldname, value, info, request, response });
     });
 
     bb.on("close", () => {
-      onClose$.next();
-      onClose$.complete();
+      options.onClose({
+        request,
+        response,
+      });
+      request.unpipe(bb);
+      bb.removeAllListeners();
     });
 
     bb.on("error", (err: any) => {
       next(err);
-    });
-
-    onClose$.subscribe(() => {
-      request.body = formData;
-      request.unpipe(bb);
-      next();
     });
 
     request.pipe(bb);

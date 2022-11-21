@@ -1,7 +1,7 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { Observable, Subject, Subscription } from "rxjs";
+import { merge, Observable, Subject, Subscription } from "rxjs";
 import { concatMap, mergeMap, tap } from "rxjs/operators";
 import { Duplex, PassThrough, Readable } from "stream";
 import { fromHttpExpress } from "../../../express/from-http-express";
@@ -9,6 +9,7 @@ import { createFolderIfNotExist } from "../../../file/folder/create-folder-if-no
 import { UploadMulter } from "../../../multer/upload-multer";
 import { fromListener } from "../../../operators/from-listener";
 import { fromWritable } from "../../../operators/from-writable";
+import { connectToBusboy } from "../../../operators/connect-to-busboy";
 // import net from 'net';
 
 const uploadMulter = new UploadMulter({
@@ -77,80 +78,44 @@ fromHttpExpress((handler) => {
     response.json({ message: "Successfully uploaded files" });
   });
 
-const onBusboyFile$ = new Subject<{
-  fieldname: string;
-  file: Readable;
-  info: {
-    filename: string;
-    encoding: string;
-    mimeType: string;
-  };
-  response: express.Response;
-  request: express.Request;
-}>();
-
-onBusboyFile$
+fromHttpExpress((handler) => {
+  apiExpress.post("/upload-multi-file-busboy", handler);
+})
   .pipe(
-    mergeMap(({ fieldname, file, info, request, response }) => {
-      return new Promise<void>((resolve, reject) => {
-        const { filename } = info;
-        const stream = fs.createWriteStream(
-          path.join(__dirname, "uploads", `${Date.now()}${filename}`)
-        );
-        file
-          .pipe(stream)
-          .on("finish", () => {
-            resolve();
-          })
-          .on("close", () => {
-            resolve();
-          })
-          .on("error", (err) => {
-            reject(err);
+    connectToBusboy(),
+    concatMap(({ onClose$, onField$, onFile$ }) => {
+      const close$ = onClose$.pipe(
+        tap(({ response }) => {
+          response.statusCode = 200;
+          response.json({ success: true });
+        })
+      );
+      const file$ = onFile$.pipe(
+        mergeMap(({ fieldname, file, info, request, response }) => {
+          const { filename } = info;
+          const stream = fs.createWriteStream(
+            path.join(__dirname, "uploads", `${Date.now()}${filename}`)
+          );
+          return new Promise<void>((resolve, reject) => {
+            file
+              .pipe(stream)
+              .on("finish", () => {
+                resolve();
+              })
+              .on("close", () => {
+                resolve();
+              })
+              .on("error", (err) => {
+                reject(err);
+              });
           });
-      }).catch((err) => {
-        console.error(err);
-      });
+        })
+      );
+
+      return merge(close$, file$);
     })
   )
   .subscribe();
-
-fromHttpExpress((handler) => {
-  apiExpress.post("/upload-single-file-throttle", handler);
-}).subscribe(({ request, response }) => {
-  const busboy = require("busboy");
-
-  let bb: any;
-  bb = busboy({ headers: request.headers });
-
-  bb.on(
-    "file",
-    (
-      fieldname: string,
-      file: Readable,
-      info: {
-        filename: string;
-        encoding: string;
-        mimeType: string;
-      }
-    ) => {
-      onBusboyFile$.next({ fieldname, file, info, request, response });
-    }
-  );
-
-  bb.on("field", (fieldname: string, value: any, info: any) => {});
-
-  bb.on("close", () => {
-    response.end();
-  });
-
-  bb.on("error", (err: any) => {
-    response.writeHead(500);
-    response.end(err);
-  });
-
-  request.pipe(bb);
-});
 
 fromHttpExpress((handler) => {
   apiExpress.post("/duplex-single-file", handler);

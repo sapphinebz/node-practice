@@ -164,19 +164,10 @@ import { percentString } from "../shared/percent-string";
   uploaderElement.uploadFactory = (file) => {
     const formData = new FormData();
     formData.set("file", file, file.name);
-    return fromFetch<any>("/upload-single-file-throttle", {
+    return fromFetch<any>("/upload-multi-file-busboy", {
       method: "POST",
       body: formData,
-      selector: async function* (res) {
-        const reader = res
-          .body!.pipeThrough(new TextDecoderStream())
-          .getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) return;
-          yield value;
-        }
-      },
+      selector: (res) => res.json(),
     }).pipe(
       tap({
         next(value) {
