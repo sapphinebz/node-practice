@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const WEB_SCRIPTS_PATH = "./src/showcase/frontend";
-const IGNORE_DIR = ["shared"];
+const IGNORE_DIR = ["shared", ".DS_Store"];
 
 const readEntryPath = () => {
   let config = {};

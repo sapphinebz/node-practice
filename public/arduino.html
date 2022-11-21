@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arduino</title>
+    <script type="module" src="./scripts/arduino/script.js"></script>
+  </head>
+  <body>
+    <div style="display: flex; flex-direction: column; row-gap: 0.5rem">
+      <div>
+        <span style="font-weight: bold">select port: </span>
+        <select data-serial-port></select>
+      </div>
+      <div>
+        <button data-pin-h>Pin 13 H</button>
+        <button data-pin-l>Pin 13 L</button>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- /list-serial -->

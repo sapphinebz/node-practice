@@ -2,9 +2,6 @@
 // import fs from "fs";
 // import { interval, map, take } from "rxjs";
 
-import EventEmitter from "node:events";
-import { fromListener } from "./operators/from-listener";
-
 // import { FromDirectory } from "./file/folder/from-directory";
 // import { fromArgs } from "./stdin/from-args";
 // import { fromCmdInput } from "./stdin/from-cmd-input";
@@ -19,6 +16,7 @@ import { fromListener } from "./operators/from-listener";
 // import "./showcase/backend/progress-download/progress-download.js";
 // import "./showcase/backend/json-database/json-database.js";
 // import "./showcase/backend/drag-drop/drag-drop.js";
+import "./showcase/backend/arduino/arduino.js";
 
 // const issue2options = {
 //   origin: true,
@@ -181,8 +179,28 @@ import { fromListener } from "./operators/from-listener";
 
 // process.stdin.pipe();
 
-const myEmitter = new EventEmitter();
+// arduino.setPin(13, "H");
 
-fromListener(myEmitter, "events", { args: true }).subscribe(console.log);
+// setTimeout(() => {
+//   arduino.setPin(13, "L");
+// }, 2000);
 
-myEmitter.emit("events", 12, 234, 234, 234);
+// interval(1000)
+//   .pipe(scan((high) => !high, false))
+//   .subscribe((isHigh) => {
+//     arduino.setPin(13, isHigh ? "H" : "L");
+
+//     arduino.readPin(2);
+//   });
+
+// arduino.data$.subscribe(console.log);
+
+// interval(1000).subscribe(() => {
+//   arduino.readPin(2);
+// });
+
+// arduino.data$.subscribe(console.log);
+
+// arduino.readPin(2).subscribe((data) => {
+//   console.log(data);
+// });
