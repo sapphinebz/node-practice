@@ -71,7 +71,7 @@ connect$
           return merge(arduinoReceive$, arduinoSend$, read$);
         }),
         catchError((err) => {
-          response.status(5000).send({ error: err });
+          response.status(500).send({ error: err });
           return EMPTY;
         })
       );
